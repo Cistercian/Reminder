@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+import ru.hd.olaf.mail.SenderEmail;
 import ru.hd.olaf.util.LogUtil;
 
 /**
@@ -22,5 +23,13 @@ public class IndexController {
         logger.debug(LogUtil.getMethodName());
 
         return "index";
+    }
+
+    @RequestMapping(value = "/mail", method = RequestMethod.GET)
+    public void sendEmail(Model model){
+        logger.debug(LogUtil.getMethodName());
+
+        SenderEmail.sendEmail();
+        //return "index";
     }
 }
