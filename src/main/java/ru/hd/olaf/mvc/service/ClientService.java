@@ -10,4 +10,6 @@ public interface ClientService {
     Client getByName(String name);
 
     Client createOrUpdate(Client client);
+
+    String getReport();
 }

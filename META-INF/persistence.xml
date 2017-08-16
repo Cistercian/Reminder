@@ -6,7 +6,7 @@
         <class>ru.hd.olaf.entities.Client</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
-            <!--<property name="hibernate.show_sql" value="true" />-->
+            <property name="hibernate.show_sql" value="false" />
             <property name="hibernate.format_sql" value="false" />
             <property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver" />
             <property name="hibernate.connection.url" value="jdbc:mysql://localhost:3306/reminder_db" />

@@ -43,4 +43,10 @@ public class ClientServiceImpl implements ClientService {
             return clientRepository.save(client);
         }
     }
+
+    public String getReport() {
+        logger.debug(LogUtil.getMethodName());
+
+        return null;
+    }
 }

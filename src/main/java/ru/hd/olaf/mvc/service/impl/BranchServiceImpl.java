@@ -24,6 +24,10 @@ public class BranchServiceImpl implements BranchService {
         logger.debug(LogUtil.getMethodName());
 
         Branch branch = brachRepository.findByCode(code);
+
+        logger.debug(String.format("Обработка подразделения с кодом: %s. Результат поиска подразделения в БД: %s",
+                code, branch != null ? "найдено" : "не найдено"));
+
         return branch != null ? branch : brachRepository.save(new Branch(code));
     }
 }

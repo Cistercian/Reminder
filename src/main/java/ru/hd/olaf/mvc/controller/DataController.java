@@ -1,5 +1,9 @@
 package ru.hd.olaf.mvc.controller;
 
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,10 +54,19 @@ public class DataController {
         logger.debug(LogUtil.getMethodName());
 
         if (!file.isEmpty()) {
-            parsingCSVFile(file);
+            parsingExcelFile(file);
             return "You successfully uploaded file=";
         }
         return "Error";
+    }
+
+    @RequestMapping(value = "/data/report", method = RequestMethod.GET)
+    public String getRepost(Model model) {
+        logger.debug(LogUtil.getMethodName());
+
+
+
+        return "index";
     }
 
 
@@ -70,6 +83,7 @@ public class DataController {
     }
 
     private String parsingCSVFile(MultipartFile file) {
+        logger.debug(LogUtil.getMethodName());
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
             while (reader.ready()) {
@@ -108,10 +122,51 @@ public class DataController {
         return null;
     }
 
-    private String parsingExcelFile(MultipartFile file){
+    private String parsingExcelFile(MultipartFile file) {
+        logger.debug(LogUtil.getMethodName());
+        try {
+            XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
+            XSSFSheet sheet = workbook.getSheetAt(0);
 
-        XSSFWorkbook myWorkBook = new XSSFWorkbook (fis);
+            for (int numRow = sheet.getFirstRowNum(); numRow <= sheet.getLastRowNum(); numRow++) {
+                logger.debug(String.format("Парсинг строки %d из %d", numRow, sheet.getLastRowNum()));
+                XSSFRow row = sheet.getRow(numRow);
 
+                Branch branch = branchService.getExistOrCreate(row.getCell(5).getStringCellValue());
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+
+                    Date createDate;
+                    if (row.getCell(1).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
+                        createDate = row.getCell(1).getDateCellValue();
+                    else
+                        createDate = sdf.parse(row.getCell(1).getStringCellValue());
+
+                    Date updateDate;
+                    if (row.getCell(2).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
+                        updateDate = row.getCell(2).getDateCellValue();
+                    else
+                        updateDate = row.getCell(2).getStringCellValue() != null && row.getCell(2).getStringCellValue().length() > 0 ?
+                            sdf.parse(row.getCell(2).getStringCellValue()) :
+                            null;
+
+                    Client client = new Client(
+                            row.getCell(0).getStringCellValue(),
+                            createDate,
+                            updateDate,
+                            row.getCell(3).getStringCellValue(),
+                            row.getCell(4).getStringCellValue(),
+                            branch
+                    );
+
+                    clientService.createOrUpdate(client);
+                } catch (ParseException e) {
+                    logger.debug(String.format("Возникла ошибка при парсинге даты: %s", e.getMessage()));
+                }
+            }
+        } catch (IOException e) {
+            logger.debug(String.format("Возникла ошибка при чтении файла: %s", e.getMessage()));
+        }
         return null;
     }
 }
