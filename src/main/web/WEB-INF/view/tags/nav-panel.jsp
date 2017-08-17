@@ -3,7 +3,7 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 
 <header class="content wam-radius">
-    <nav class="navbar navbar-default wam-radius" role="navigation">
+    <nav class="navbar navbar-default wam-radius wam-panel-border" role="navigation">
         <!-- Название компании и кнопка, которая отображается для мобильных устройств группируются для лучшего отображения при свертывании -->
         <div class="row">
             <div class="col-xs-12 col-md-10">
@@ -34,7 +34,7 @@
 </header>
 
 <!-- Modal Panel -->
-<div id="modal" class="modal  " tabindex="-1" role="dialog" aria-labelledby="modalHeader"
+<div id="modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="modalHeader"
      aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content wam-radius">

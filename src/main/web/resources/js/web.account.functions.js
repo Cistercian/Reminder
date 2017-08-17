@@ -74,7 +74,7 @@ function displayMessage(type, message) {
     if (type == 'sendEmail') {
         bodyContent =
             "<div class='col-xs-12'>" +
-            "<h4><strong>Укажите почтовый адрес получателя письма</strong></h4>" +
+            "<strong>Укажите почтовый адрес получателя письма</strong></h4>" +
             "</div>" +
             "<div class='col-xs-12'>" +
             "<input id='address' type='text' class='form-control form input-lg'/>" +
@@ -82,7 +82,7 @@ function displayMessage(type, message) {
             "";
         footerContent =
             "<div class='col-xs-12 col-md-4 col-md-offset-4 wam-not-padding'>" +
-            "<button type='button' class='btn btn-danger btn-lg btn-block ' " +
+            "<hr><button type='button' class='btn btn-danger btn-lg btn-block ' " +
             "onclick=\"$('#modal').modal('hide');sendEmail();\">" +
             "Отправить" +
             "</button>" +
@@ -96,7 +96,7 @@ function displayMessage(type, message) {
         bodyContent =
             "<div class='col-xs-12'>" +
             "<h4><strong>" + message + "</strong></h4>" +
-            "</div>" +
+            "<hr></div>" +
             "";
         footerContent =
             "<div class='col-xs-12 col-md-6 col-md-offset-6 wam-not-padding'>" +

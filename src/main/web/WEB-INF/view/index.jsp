@@ -186,7 +186,7 @@
     }
 </script>
 
-<div class="content container-fluid wam-radius wam-min-height-0">
+<div class="content container-fluid wam-radius wam-min-height-0 wam-panel-border">
     <input id="_csrf_token" type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
     <textarea id="response" name="response" style="display: none;">${response}</textarea>
     <div class='row'>

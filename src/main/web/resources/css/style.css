@@ -231,6 +231,9 @@ div.dataTables_filter {
 	body {
 		background-color: #e6e6e6;
 		overflow-y: scroll;
+		background: url('/resources/img/background2.jpg') center no-repeat;
+		background-size: cover;
+		overflow-y: hidden;
 	}
 	.wam-content-login {
 		width:100%;
@@ -428,9 +431,9 @@ div.dataTables_filter {
 .form-control {
 	border: 2px solid #a1ad9f;
 }
-.wam-panel-login{
+.wam-panel-border {
 	border-color: #286090;
-	border: 3px solid #286090;
+	border: 1px solid #286090;
 	border-radius: 6px;
 }
 .modal-body {
