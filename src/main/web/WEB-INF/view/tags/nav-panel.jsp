@@ -5,6 +5,14 @@
 <header class="content wam-radius">
     <nav class="navbar navbar-default wam-radius" role="navigation">
         <!-- Название компании и кнопка, которая отображается для мобильных устройств группируются для лучшего отображения при свертывании -->
+        <div class="row">
+            <div class="col-xs-12 col-md-10">
+                <img src="/resources/img/logoName.png" class="img-responsive wam-top-radius wam-margin-left-1 wam-margin-top-1" alt="">
+            </div>
+            <div class="col-xs-12 col-md-2">
+                <img src="/resources/img/logoPict.png" class="img-responsive wam-top-radius wam-margin-top-1" alt="">
+            </div>
+        </div>
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
                 <span class="sr-only">Toggle navigation</span>
@@ -12,11 +20,10 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <p class="navbar-brand wam-font-size"><span>Reminder</span></p>
         </div>
 
         <div id="navbar" class="collapse navbar-collapse">
-            <ul class="nav navbar-nav navbar-right">
+            <ul class="nav navbar-nav navbar-left">
                 <li><a href="/">Главная</a></li>
                 <li><a href="/data">Данные</a></li>
 

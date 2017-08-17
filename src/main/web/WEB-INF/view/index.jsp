@@ -52,11 +52,12 @@
             dataType: 'json',
             success: function (data) {
                 var tableData = new Array();
-                data.forEach(function (data, index, stats) {
+                jQuery.each(data, function(index, data){
+                    /*                data.forEach(function (data, index, stats) {*/
                     var entity = new Array();
 
-                    entity[0] = data.count;
-                    entity[1] = data.branchCode;
+                    entity[0] = data.branchCode;
+                    entity[1] = data.count;
 
                     tableData.push(entity);
                 });
@@ -94,11 +95,11 @@
                     },
                     data: tableData,
                     columns: [
-                        { title: "Количество просроченных анкет" },
-                        { title: "Код подразделения" }
+                        { title: "Код подразделения" },
+                        { title: "Количество просроченных анкет" }
                     ],
                     "sort": true,
-                    "order": [[0, "DESC"]],
+                    "order": [[0, "DESC"]]
                 });
 
                 $('#stats_filter').empty();
@@ -154,6 +155,7 @@
 </script>
 
 <div class="content container-fluid wam-radius wam-min-height-0">
+    <input id="_csrf_token" type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
     <textarea id="response" name="response" style="display: none;">${response}</textarea>
     <div class='row'>
         <div class="container-fluid wam-not-padding-xs">

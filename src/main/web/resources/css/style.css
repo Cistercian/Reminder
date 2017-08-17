@@ -445,3 +445,6 @@ div.dataTables_filter {
 .wam-margin-panel {
 	margin: 5px;
 }
+.navbar-default {
+	background-color: #ffffff;
+}
