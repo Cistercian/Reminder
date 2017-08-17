@@ -1,6 +1,7 @@
 package ru.hd.olaf.mvc.service;
 
 import ru.hd.olaf.entities.Client;
+import ru.hd.olaf.util.OverdueGroupEntity;
 
 import java.util.List;
 
@@ -20,4 +21,6 @@ public interface ClientService {
     Long getCountOverdue();
 
     List<Client> getOverdueClients();
+
+    List<OverdueGroupEntity> getStats();
 }

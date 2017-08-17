@@ -9,6 +9,7 @@ import ru.hd.olaf.entities.Client;
 import ru.hd.olaf.mvc.repository.ClientRepository;
 import ru.hd.olaf.mvc.service.ClientService;
 import ru.hd.olaf.util.LogUtil;
+import ru.hd.olaf.util.OverdueGroupEntity;
 
 import java.util.List;
 
@@ -25,7 +26,9 @@ public class ClientServiceImpl implements ClientService {
 
     public Client getByName(String name) {
         logger.debug(LogUtil.getMethodName());
-        return clientRepository.findByName(name);
+        List<Client> clients = Lists.newArrayList(clientRepository.findByName(name));
+
+        return clients.size() > 0 ? clients.get(0) : null;
     }
 
     public Client createOrUpdate(Client client) {
@@ -64,5 +67,10 @@ public class ClientServiceImpl implements ClientService {
     public List<Client> getOverdueClients() {
         logger.debug(LogUtil.getMethodName());
         return Lists.newArrayList(clientRepository.getOverdue());
+    }
+
+    public List<OverdueGroupEntity> getStats() {
+        logger.debug(LogUtil.getMethodName());
+        return Lists.newArrayList(clientRepository.getOverdueByBranch());
     }
 }

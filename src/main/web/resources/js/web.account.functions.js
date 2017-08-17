@@ -67,3 +67,46 @@ function setModalSize(type){
         $('.modal-lg').removeClass('wam-modal-dialog');
     }
 }
+function displayMessage(type, message) {
+    ClearModalPanel();
+
+    var bodyContent, footerContent;
+    if (type == 'sendEmail') {
+        bodyContent =
+            "<div class='col-xs-12'>" +
+            "<h4><strong>Укажите почтовый адрес получателя письма</strong></h4>" +
+            "</div>" +
+            "<div class='col-xs-12'>" +
+            "<input id='address' type='text' class='form-control form input-lg'/>" +
+            "</div>" +
+            "";
+        footerContent =
+            "<div class='col-xs-12 col-md-4 col-md-offset-4 wam-not-padding'>" +
+            "<button type='button' class='btn btn-danger btn-lg btn-block ' " +
+            "onclick=\"$('#modal').modal('hide');sendEmail();\">" +
+            "Отправить" +
+            "</button>" +
+            "</div>" +
+            "<div class='col-xs-12 col-md-4 wam-not-padding'>" +
+            "<button type='button' class='btn btn-primary btn-lg btn-block ' data-dismiss='modal'>" +
+            "Отмена" +
+            "</button>" +
+            "</div>";
+    } else if (type == 'message') {
+        bodyContent =
+            "<div class='col-xs-12'>" +
+            "<h4><strong>" + message + "</strong></h4>" +
+            "</div>" +
+            "";
+        footerContent =
+            "<div class='col-xs-12 col-md-6 col-md-offset-6 wam-not-padding'>" +
+            "<button type='button' class='btn btn-primary btn-lg btn-block ' data-dismiss='modal' onclick=\"location.href='/'\">" +
+            "Закрыть" +
+            "</button>" +
+            "</div>";
+    }
+    $('#modalBody').append(bodyContent);
+    $('#modalFooter').append(footerContent);
+
+    $('#modal').modal('show');
+}

@@ -13,6 +13,8 @@
     <!-- css -->
     <spring:url value="/resources/css/bootstrap.min.css" var="css"/>
     <link rel="stylesheet" href="${css}">
+    <spring:url value="/resources/css/dataTables.bootstrap.css" var="css"/>
+    <link rel="stylesheet" href="${css}">
     <spring:url value="/resources/css/style.css" var="css"/>
     <link rel="stylesheet" href="${css}">
     <link href="https://fonts.googleapis.com/css?family=Roboto+Slab" rel="stylesheet">
@@ -24,6 +26,9 @@
     <script src="${js}"></script>
     <!--waitingDialog-->
     <spring:url value="/resources/js/waitingDialog.js" var="js"/>
+    <script src="${js}"></script>
+    <!--DataTables-->
+    <spring:url value="/resources/js/jquery.dataTables.min.js" var="js"/>
     <script src="${js}"></script>
 
     <!--custom functions-->
@@ -40,6 +45,76 @@
         if ($(response).val() != '') {
             displayMessage('message', $('#response').val());
         }
+
+        $.ajax({
+            url: '/getStats',
+            type: "GET",
+            dataType: 'json',
+            success: function (data) {
+                var tableData = new Array();
+                data.forEach(function (data, index, stats) {
+                    var entity = new Array();
+
+                    entity[0] = data.count;
+                    entity[1] = data.branchCode;
+
+                    tableData.push(entity);
+                });
+
+                $('#bodyTable').append(
+                        "<table id='stats' class='table table-striped table-bordered table-text wam-margin-top-2' cellspacing='0' " +
+                        "width='100%'>" +
+                        "</table>"
+                );
+
+                var table = $('#stats').DataTable({
+                    responsive: true,
+                    "bLengthChange": false,
+                    language: {
+                        "processing": "Подождите...",
+                        "search": "Поиск:",
+                        "lengthMenu": "Показать _MENU_ записей",
+                        "info": "Записи с _START_ до _END_ (Всего записей: _TOTAL_).",
+                        "infoEmpty": "Записи с 0 до 0 из 0 записей",
+                        "infoFiltered": "(отфильтровано из _MAX_ записей)",
+                        "infoPostFix": "",
+                        "loadingRecords": "Загрузка записей...",
+                        "zeroRecords": "Записи отсутствуют.",
+                        "emptyTable": "В таблице отсутствуют данные",
+                        "paginate": {
+                            "first": "Первая",
+                            "previous": "Предыдущая",
+                            "next": "Следующая",
+                            "last": "Последняя"
+                        },
+                        "aria": {
+                            "sortAscending": ": активировать для сортировки столбца по возрастанию",
+                            "sortDescending": ": активировать для сортировки столбца по убыванию"
+                        }
+                    },
+                    data: tableData,
+                    columns: [
+                        { title: "Количество просроченных анкет" },
+                        { title: "Код подразделения" }
+                    ],
+                    "sort": true,
+                    "order": [[0, "DESC"]],
+                });
+
+                $('#stats_filter').empty();
+                $('#stats_filter').append(
+                        "<div class='col-xs-2 col-md-4 wam-padding-left-0 wam-padding-right-0'>" +
+                        "<h5>Поиск: </h5>" +
+                        "</div>" +
+                        "<div class='col-xs-10 col-md-8 wam-padding-left-0 wam-padding-right-0'>" +
+                        "<input id='searchDataTable' type='text' class='form-control form' placeholder='' aria-controls='stats'>" +
+                        "</div>"
+                );
+                $('#searchDataTable').on( 'keyup', function () {
+                    table.search( this.value ).draw();
+                });
+            }
+        });
     });
     $(function () {
         $(document).on('change', ':file', function () {
@@ -58,50 +133,6 @@
             });
         });
     });
-
-    function displayMessage(type, message) {
-        ClearModalPanel();
-
-        var bodyContent, footerContent;
-        if (type == 'sendEmail') {
-            bodyContent =
-                    "<div class='col-xs-12'>" +
-                    "<h4><strong>Укажите почтовый адрес получателя письма</strong></h4>" +
-                    "</div>" +
-                    "<div class='col-xs-12'>" +
-                    "<input id='address' type='text' class='form-control form input-lg'/>" +
-                    "</div>" +
-                    "";
-            footerContent =
-                    "<div class='col-xs-12 col-md-4 col-md-offset-4 wam-not-padding'>" +
-                    "<button type='button' class='btn btn-danger btn-lg btn-block ' " +
-                    "onclick=\"$('#modal').modal('hide');sendEmail();\">" +
-                    "Отправить" +
-                    "</button>" +
-                    "</div>" +
-                    "<div class='col-xs-12 col-md-4 wam-not-padding'>" +
-                    "<button type='button' class='btn btn-primary btn-lg btn-block ' data-dismiss='modal'>" +
-                    "Отмена" +
-                    "</button>" +
-                    "</div>";
-        } else if (type == 'message') {
-            bodyContent =
-                    "<div class='col-xs-12'>" +
-                    "<h4><strong>" + message + "</strong></h4>" +
-                    "</div>" +
-                    "";
-            footerContent =
-                    "<div class='col-xs-12 col-md-4 wam-not-padding'>" +
-                    "<button type='button' class='btn btn-primary btn-lg btn-block ' data-dismiss='modal'>" +
-                    "Закрыть" +
-                    "</button>" +
-                    "</div>";
-        }
-        $('#modalBody').append(bodyContent);
-        $('#modalFooter').append(footerContent);
-
-        $('#modal').modal('show');
-    }
     function sendEmail(){
         $.ajax({
             url:  '/sendEmail',
@@ -123,13 +154,12 @@
 </script>
 
 <div class="content container-fluid wam-radius wam-min-height-0">
-    <input id="_csrf_token" type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
     <textarea id="response" name="response" style="display: none;">${response}</textarea>
     <div class='row'>
         <div class="container-fluid wam-not-padding-xs">
             <div class="panel panel-default wam-margin-panel">
                 <div class="panel-heading wam-page-title">
-                    <h3 class="wam-margin-bottom-0 wam-margin-top-0">Статистика и данные</h3>
+                    <h3 class="wam-margin-bottom-0 wam-margin-top-0">Исходные данные</h3>
                 </div>
                 <div class="panel-body">
                     <div class="row">
@@ -165,7 +195,8 @@
                         </div>
                         <div class="row">
                             <div class="col-xs-12 col-md-6 wam-not-padding-xs">
-                                <button type="submit" class="btn-danger btn-lg btn-block wam-btn-2">
+                                <button type="submit" class="btn-danger btn-lg btn-block wam-btn-2"
+                                        onclick="history.pushState({}, null, '/');">
                                     Импортировать
                                 </button>
                             </div>
@@ -176,20 +207,30 @@
 
             <div class="panel panel-default wam-margin-panel">
                 <div class="panel-heading wam-page-title">
-                    <h3 class="wam-margin-bottom-0 wam-margin-top-0">Уведомления</h3>
+                    <h3 class="wam-margin-bottom-0 wam-margin-top-0">Отчеты</h3>
                 </div>
                 <div class="panel-body">
+                    <div id="bodyTable" class="panel-body">
+                    </div>
+
                     <div class="col-xs-12">
                         <p class="wam-margin-top-2">
 							<span>
-								Информацию о списке клиентов, анкеты которых подлежат пересмотру, Вы можете отправить письмом или ...
+								Информацию о клиентах, анкеты которых подлежат пересмотру, Вы можете отправить письмом или
+								загрузить в виде файла.
 							</span>
                         </p>
                     </div>
                     <div class="col-xs-12 col-md-6">
                         <button type="submit" class="btn-primary btn-lg btn-block wam-btn-2"
                                 onclick="displayMessage('sendEmail', ''); return false;">
-                            Отправить почтовое уведомление
+                            Отправить почтой
+                        </button>
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+                        <button type="submit" class="btn-default btn-lg btn-block wam-btn-2"
+                                onclick="location.href='/data/overdue'; return false;">
+                            Выгрузить файл
                         </button>
                     </div>
                 </div>

@@ -4,9 +4,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.hd.olaf.util.LogUtil;
 
+import javax.activation.DataHandler;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -16,17 +23,13 @@ public class SenderEmail {
 
     private static final Logger logger = LoggerFactory.getLogger(SenderEmail.class);
 
-    public static String sendEmail(String address){
+    public static String sendEmail(String address, InputStream inputStream, Map<String, String> settings) throws IOException {
         logger.debug(LogUtil.getMethodName());
 
-        Properties properties = new Properties();
-        properties.put("mail.transport.protocol", "smtp");
-        properties.put("mail.smtp.host", "mskmail.msk.russb.org");
-        properties.put("mail.smtp.port", "25");
-        properties.put("mail.smtp.auth", "true");
+        Properties properties = getConnectProperties(settings);
 
-        final String username = "e-burg\\scaneburg";
-        final String password = "Ry@85enK!";
+        final String username = settings.get("smtpLogin");
+        final String password = settings.get("smtpPassword");
         Authenticator authenticator = new Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(username, password);
@@ -36,32 +39,56 @@ public class SenderEmail {
         StringBuilder message = new StringBuilder();
         address = address.replace(",", ";");
 
-        for (String addressTo: address.split(";")) {
-            try {
-                Session session = Session.getDefaultInstance(properties, authenticator);
+        try {
+            Session session = Session.getDefaultInstance(properties, authenticator);
 
-                MimeMessage mail = new MimeMessage(session);
+            MimeMessage mail = new MimeMessage(session);
 
-                // Set the from address
-                mail.setFrom(new InternetAddress("scaneburg@rgsbank.ru"));
-                // Set the to address
-                mail.addRecipient(Message.RecipientType.TO, new InternetAddress(addressTo));
-                // Set the subject
-                mail.setSubject("Test");
-                // Set the content
-                mail.setText("Test");
-                // Send message
-                Transport.send(mail);
+            mail.setFrom(new InternetAddress(settings.get("smtpSender")));
+            mail.setSubject(settings.get("smtpTitle"));
 
-                message.append(String.format("%s : письмо отправлено", addressTo));
-                logger.debug("Письмо отправлено");
+            MimeBodyPart messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setText(
+                    "Данное письмо сформированно автоматически, пожалуйста, не отвечайте на него. ");
+            Multipart multipart = new MimeMultipart();
+            multipart.addBodyPart(messageBodyPart);
 
-            } catch (MessagingException e) {
-                message.append(String.format("%s : Ошибка при отправке письма: %s", addressTo, e.getMessage()));
-                logger.debug(String.format("Ошибка при отправке письма: %s", e.getMessage()));
+            messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setDataHandler(new DataHandler(new ByteArrayDataSource(inputStream, "application/vnd.ms-excel")));
+            messageBodyPart.setFileName("overdue.xls");
+            multipart.addBodyPart(messageBodyPart);
+
+            mail.setContent(multipart);
+
+            // Send message
+            for (String addressTo : address.split(";")) {
+                try {
+                    mail.setRecipient(Message.RecipientType.TO, new InternetAddress(addressTo));
+                    Transport.send(mail);
+
+                    message.append(String.format("%s : письмо отправлено", addressTo));
+                    logger.debug("Письмо отправлено");
+                } catch (MessagingException e) {
+                    message.append(String.format("Ошибка при отправке письма: %s", e.getMessage()));
+                    logger.debug(String.format("Ошибка при отправке письма: %s", e.getMessage()));
+                }
             }
+        } catch (MessagingException e) {
+            message.append(String.format("Ошибка при генерации письма: %s", e.getMessage()));
+            logger.debug(String.format("Ошибка при генерации письма: %s", e.getMessage()));
         }
 
         return message.toString();
+    }
+
+    private static Properties getConnectProperties(Map<String, String> settings){
+        Properties properties = new Properties();
+
+        properties.put("mail.transport.protocol", "smtp");
+        properties.put("mail.smtp.host", settings.get("smtpHost"));
+        properties.put("mail.smtp.port", settings.get("smtpPort"));
+        properties.put("mail.smtp.auth", "true");
+
+        return properties;
     }
 }

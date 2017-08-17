@@ -36,23 +36,33 @@
 <jsp:include page="/WEB-INF/view/tags/nav-panel.jsp"></jsp:include>
 
 <script language="javascript" type="text/javascript">
-    $(function () {
-        $(document).on('change', ':file', function () {
-            var input = $(this),
-                    numFiles = input.get(0).files ? input.get(0).files.length : 1,
-                    label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
-            input.trigger('fileselect', [numFiles, label]);
+    function saveSettings(){
+        $.ajax({
+            url:  '/data/settings/save',
+            type: 'POST',
+            data: {
+                'columnName': $('#columnName').val(),
+                'columnCreateDate': $('#columnCreateDate').val(),
+                'columnUpdateDate': $('#columnUpdateDate').val(),
+                'columnBranchCode': $('#columnBranchCode').val(),
+                'smtpHost': $('#smtpHost').val(),
+                'smtpPort': $('#smtpPort').val(),
+                'smtpLogin': $('#smtpLogin').val(),
+                'smtpPassword': $('#smtpPassword').val(),
+                'smtpSender': $('#smtpSender').val(),
+                'smtpTitle': $('#smtpTitle').val(),
+            },
+            dataType: 'json',
+            beforeSend: function () {
+                displayLoader();
+            },
+            success: function (data) {
+                hideLoader();
+
+                displayMessage('message', data.message);
+            }
         });
-        $(document).ready(function () {
-            $(':file').on('fileselect', function (event, numFiles, label) {
-                var input = $(this).parents('.input-group').find(':text'),
-                        log = numFiles > 1 ? /*numFiles + ' файлов выбрано'*/ label : label;
-                if (input.length) {
-                    input.val(log);
-                }
-            });
-        });
-    });
+    }
 </script>
 
 <div class="content container-fluid wam-radius wam-min-height-0">
@@ -62,31 +72,145 @@
         <div class="container-fluid wam-not-padding-xs">
             <div class="panel panel-default wam-margin-panel">
                 <div class="panel-heading wam-page-title">
-                    <h3 class="wam-margin-bottom-0 wam-margin-top-0">Импорт данных в БД</h3>
+                    <h3 class="wam-margin-bottom-0 wam-margin-top-0">Настройки</h3>
                 </div>
                 <div class="panel-body ">
-                    <form:form action="data/import" enctype="multipart/form-data" useToken="true">
-                        <div class="row">
-                            <div class="col-xs-12 col-md-6 wam-not-padding-xs">
-                                <div class="input-group ">
-                                    <label class="input-group-btn">
-                                        <span class="btn btn-primary ">
-                                            Browse&hellip;
-                                            <input type="file" style="display: none;" multiple name="file">
-                                        </span>
-                                    </label>
-                                    <input type="text" class="form-control" readonly>
+                    <div class="panel panel-default wam-margin-panel">
+                        <div class="panel-heading wam-page-title">
+                            <h4 class="wam-margin-bottom-0 wam-margin-top-0">Настройки структуры загружаемых файлов:</h4>
+                        </div>
+                        <div class="panel-body ">
+                            <div class="col-xs-12">
+                                <h4><strong>Номера используемых столбцов:</strong></h4>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Наименование клиента</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="columnName" type="number" class="form-control wam-text-size-1" value="${columnName}"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Дата заведения клиента</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="columnCreateDate" type="number" class="form-control wam-text-size-1" value="${columnCreateDate}"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Дата обновления анкеты</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="columnUpdateDate" type="number" class="form-control wam-text-size-1" value="${columnUpdateDate}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Код подразделения</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="columnBranchCode" type="number" class="form-control wam-text-size-1" value="${columnBranchCode}"/>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-xs-12 col-md-6 wam-not-padding-xs">
-                                <button type="submit" class="btn-danger btn-lg btn-block wam-btn-2">
-                                    Import
-                                </button>
+                    </div>
+
+                    <div class="panel panel-default wam-margin-panel">
+                        <div class="panel-heading wam-page-title">
+                            <h4 class="wam-margin-bottom-0 wam-margin-top-0">Параметры подключения к почтовому серверу</h4>
+                        </div>
+                        <div class="panel-body ">
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Адрес сервера</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-8 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="smtpHost" type="text" class="form-control wam-text-size-1" value="${smtpHost}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Номер порта</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="smtpPort" type="text" class="form-control wam-text-size-1" value="${smtpPort}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Имя пользователя для авторизации</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-6 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="smtpLogin" type="text" class="form-control wam-text-size-1" value="${smtpLogin}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Пароль для авторизации</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-6 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="smtpPassword" type="password" class="form-control wam-text-size-1" value="${smtpPassword}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Адрес отправителя</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-6 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="smtpSender" type="text" class="form-control wam-text-size-1" value="${smtpSender}"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h4>Тема письма</h4>
+                                </div>
+                                <div class="col-xs-12 col-md-8 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="smtpTitle" type="text" class="form-control wam-text-size-1" value="${smtpTitle}"/>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-                    </form:form>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12 col-md-6">
+                            <button type="submit" class="btn-primary btn-lg btn-block wam-btn-2"
+                                    onclick="saveSettings();">
+                                Сохранить
+                            </button>
+                        </div>
+                        <div class="col-xs-12 col-md-6">
+                            <button type="submit" class="btn-default btn-lg btn-block wam-btn-2"
+                                    onclick="location.href='/data/data'; return false;">
+                                Отмена
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

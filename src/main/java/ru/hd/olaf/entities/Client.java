@@ -22,6 +22,13 @@ public class Client {
     public Client() {
     }
 
+    public Client(String name, Date createDate, Date updateDate, Branch branch) {
+        this.name = name;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
+        this.branch = branch;
+    }
+
     public Client(String name, Date createDate, Date updateDate, String risk, String rating, Branch branch) {
         this.name = name;
         this.createDate = createDate;
@@ -53,7 +60,7 @@ public class Client {
     }
 
     @Basic
-    @Column(name = "create_date", nullable = false)
+    @Column(name = "create_date", nullable = true)
     @Temporal(TemporalType.DATE)
     public Date getCreateDate() {
         return createDate;

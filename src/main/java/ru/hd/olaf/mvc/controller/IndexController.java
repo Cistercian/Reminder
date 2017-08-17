@@ -1,8 +1,6 @@
 package ru.hd.olaf.mvc.controller;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -15,14 +13,16 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 import ru.hd.olaf.entities.Branch;
 import ru.hd.olaf.entities.Client;
 import ru.hd.olaf.mail.SenderEmail;
 import ru.hd.olaf.mvc.service.BranchService;
 import ru.hd.olaf.mvc.service.ClientService;
+import ru.hd.olaf.mvc.service.SettingService;
 import ru.hd.olaf.util.JsonResponse;
 import ru.hd.olaf.util.LogUtil;
+import ru.hd.olaf.util.OverdueGroupEntity;
+import ru.hd.olaf.xls.XLSGenerator;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -31,6 +31,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by d.v.hozyashev on 16.08.2017.
@@ -42,11 +43,13 @@ public class IndexController {
     private ClientService clientService;
     @Autowired
     private BranchService branchService;
+    @Autowired
+    private SettingService settingService;
 
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class); //логгер
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String getViewIndex(Model model){
+    public String getViewIndex(Model model) {
         logger.debug(LogUtil.getMethodName());
 
         model.addAttribute("countTotal", clientService.getCountTotal());
@@ -56,10 +59,24 @@ public class IndexController {
     }
 
     @RequestMapping(value = "/sendEmail", method = RequestMethod.POST)
-    public @ResponseBody JsonResponse sendEmail(@RequestParam(value = "address") String address){
+    public
+    @ResponseBody
+    JsonResponse sendEmail(@RequestParam(value = "address") String address) {
         logger.debug(LogUtil.getMethodName());
 
-        JsonResponse response = new JsonResponse(SenderEmail.sendEmail(address));
+        JsonResponse response;
+        try {
+            Map<String, String> settings = settingService.getSettings();
+
+            InputStream inputStream = new ByteArrayInputStream(XLSGenerator
+                    .getXLSByteArray(clientService.getOverdueClients()).toByteArray());
+
+            response = new JsonResponse(SenderEmail.sendEmail(address, inputStream, settings));
+        } catch (IOException e) {
+            String message = String.format("Возникла ошибка при попытке создать письмо: %s", e.getMessage());
+            logger.debug(message);
+            response = new JsonResponse(message);
+        }
 
         return response;
     }
@@ -78,7 +95,7 @@ public class IndexController {
         model.addAttribute("countOverdue", clientService.getCountOverdue());
         model.addAttribute("response", response);
 
-        return "redirect:/";
+        return "index";
     }
 
     @RequestMapping(value = "/data/overdue", method = RequestMethod.GET)
@@ -86,13 +103,16 @@ public class IndexController {
         logger.debug(LogUtil.getMethodName());
 
         try {
-            ByteArrayOutputStream bytesOutput = getXLSByteArray();
+            ByteArrayOutputStream bytesOutput = XLSGenerator.getXLSByteArray(clientService.getOverdueClients());
 
             InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(bytesOutput.toByteArray()));
-            org.apache.commons.io.IOUtils.copy(inputStream, response.getOutputStream());
 
-            response.setHeader("Content-Disposition", "attachment; filename=\"overdue.xls\"");
-            response.flushBuffer();
+            response.setContentType("application/x-download");
+            response.setContentLength(bytesOutput.size());
+            response.setHeader("Content-disposition", "attachment; filename=\"overdue1.xls\"");
+
+            org.apache.commons.io.IOUtils.copy(inputStream, response.getOutputStream());
+            response.getOutputStream().close();
 
             logger.debug("Обработка завершена - сформированные данные переданы в response");
         } catch (IOException e) {
@@ -100,63 +120,13 @@ public class IndexController {
         }
     }
 
-    private ByteArrayOutputStream getXLSByteArray() throws IOException {
-        Workbook book = new HSSFWorkbook();
-        Sheet sheet = book.createSheet("364-P");
-
-        DataFormat format = book.createDataFormat();
-        CellStyle dateStyle = book.createCellStyle();
-        dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
-
-        Row row = sheet.createRow(0);
-        Cell name = row.createCell(0);
-        name.setCellValue("Наименование клиента");
-
-        Cell createDate = row.createCell(1);
-        createDate.setCellValue("Дата заведения клиента");
-
-        Cell updateDate = row.createCell(2);
-        updateDate.setCellValue("Дата обновления анкеты");
-
-        Cell branchCode = row.createCell(3);
-        branchCode.setCellValue("Код подразделения");
-
-        for (Client client : clientService.getOverdueClients()){
-            logger.debug(String.format("Формируем строку в файле для клиента %s", client.getName()));
-
-            row = sheet.createRow(1);
-            name = row.createCell(0);
-            createDate = row.createCell(1);
-            updateDate = row.createCell(2);
-            branchCode = row.createCell(3);
-
-            name.setCellValue(client.getName());
-
-            createDate.setCellStyle(dateStyle);
-            updateDate.setCellStyle(dateStyle);
-
-            if (client.getCreateDate() != null)
-                createDate.setCellValue(client.getCreateDate());
-            if (client.getUpdateDate() != null)
-                createDate.setCellValue(client.getUpdateDate());
-
-            if (client.getBranch() != null)
-                branchCode.setCellValue(client.getBranch().getCode());
-        }
-        // Меняем размер столбца
-        sheet.autoSizeColumn(0);
-        sheet.autoSizeColumn(1);
-        sheet.autoSizeColumn(2);
-        sheet.autoSizeColumn(3);
-
-        ByteArrayOutputStream bytesOutput = new ByteArrayOutputStream();
-
-        book.write(bytesOutput);
-
-        logger.debug("Сохранили полученный xls файл в память.");
-        return bytesOutput;
+    @RequestMapping(value = "/getStats", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    List<OverdueGroupEntity> getStats() {
+        logger.debug(LogUtil.getMethodName());
+        return clientService.getStats();
     }
-
 
     /**
      * Служебная функция для корректного парсинга дат
@@ -170,6 +140,7 @@ public class IndexController {
         binder.registerCustomEditor(Date.class, new CustomDateEditor(sdf, true));
     }
 
+    @Deprecated
     private String parsingCSVFile(MultipartFile file) {
         logger.debug(LogUtil.getMethodName());
         try {
@@ -214,44 +185,47 @@ public class IndexController {
         logger.debug(LogUtil.getMethodName());
 
         int errors = 0;
-        int total = 0;
-        String message = "";
+        int total;
+        String message;
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
             XSSFSheet sheet = workbook.getSheetAt(0);
-
 
             total = sheet.getLastRowNum();
 
             for (int numRow = sheet.getFirstRowNum(); numRow <= total; numRow++) {
                 logger.debug(String.format("Парсинг строки %d из %d", numRow, total));
                 XSSFRow row = sheet.getRow(numRow);
-
-                Branch branch = branchService.getExistOrCreate(row.getCell(5).getStringCellValue());
                 try {
+                    int column = Integer.parseInt(settingService.getByName("columnBranchCode").getValue());
+                    Branch branch = branchService.getExistOrCreate(row.getCell(column).getStringCellValue());
+
                     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
 
                     Date createDate;
+                    column = Integer.parseInt(settingService.getByName("columnCreateDate").getValue());
                     if (row.getCell(1).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
-                        createDate = row.getCell(1).getDateCellValue();
+                        createDate = row.getCell(column).getDateCellValue();
                     else
-                        createDate = sdf.parse(row.getCell(1).getStringCellValue());
+                        createDate = sdf.parse(row.getCell(column).getStringCellValue());
 
                     Date updateDate;
+                    column = Integer.parseInt(settingService.getByName("columnUpdateDate").getValue());
                     if (row.getCell(2).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
-                        updateDate = row.getCell(2).getDateCellValue();
+                        updateDate = row.getCell(column).getDateCellValue();
                     else
-                        updateDate = row.getCell(2).getStringCellValue() != null && row.getCell(2).getStringCellValue().length() > 0 ?
-                                sdf.parse(row.getCell(2).getStringCellValue()) :
+                        updateDate = row.getCell(column).getStringCellValue() != null && row.getCell(column).getStringCellValue().length() > 0 ?
+                                sdf.parse(row.getCell(column).getStringCellValue()) :
                                 null;
 
+                    column = Integer.parseInt(settingService.getByName("columnName").getValue());
                     Client client = new Client(
-                            row.getCell(0).getStringCellValue(),
+                            row.getCell(column).getStringCellValue(),
                             createDate,
                             updateDate,
-                            row.getCell(3).getStringCellValue(),
-                            row.getCell(4).getStringCellValue(),
+                            //row.getCell(3).getStringCellValue(),
+                            //row.getCell(4).getStringCellValue(),
                             branch
                     );
 
@@ -259,6 +233,13 @@ public class IndexController {
 
                 } catch (ParseException e) {
                     logger.debug(String.format("Возникла ошибка при парсинге даты: %s", e.getMessage()));
+                    errors++;
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                    logger.debug(String.format("Ошибка настроек: NullPointExceptions %s", e.getMessage()));
+                    errors++;
+                } catch (IllegalStateException e) {
+                    logger.debug(String.format("Ошибка настроек: %s", e.getMessage()));
                     errors++;
                 }
             }
@@ -268,7 +249,7 @@ public class IndexController {
 
         } catch (IOException e) {
             message = String.format("Возникла ошибка при чтении файла: %s", e.getMessage());
-            logger.debug(String.format(message));
+            logger.debug(message);
         }
         return message;
     }
