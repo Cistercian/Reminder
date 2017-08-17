@@ -1,5 +1,6 @@
 package ru.hd.olaf.mvc.service.impl;
 
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,8 @@ import ru.hd.olaf.entities.Client;
 import ru.hd.olaf.mvc.repository.ClientRepository;
 import ru.hd.olaf.mvc.service.ClientService;
 import ru.hd.olaf.util.LogUtil;
+
+import java.util.List;
 
 /**
  * Created by d.v.hozyashev on 16.08.2017.
@@ -48,5 +51,18 @@ public class ClientServiceImpl implements ClientService {
         logger.debug(LogUtil.getMethodName());
 
         return null;
+    }
+
+    public Long getCountTotal() {
+        return clientRepository.count();
+    }
+
+    public Long getCountOverdue() {
+        return clientRepository.getCountOverdue();
+    }
+
+    public List<Client> getOverdueClients() {
+        logger.debug(LogUtil.getMethodName());
+        return Lists.newArrayList(clientRepository.getOverdue());
     }
 }

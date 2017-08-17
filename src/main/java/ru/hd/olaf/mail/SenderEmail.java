@@ -16,7 +16,7 @@ public class SenderEmail {
 
     private static final Logger logger = LoggerFactory.getLogger(SenderEmail.class);
 
-    public static void sendEmail(){
+    public static String sendEmail(String address){
         logger.debug(LogUtil.getMethodName());
 
         Properties properties = new Properties();
@@ -33,28 +33,35 @@ public class SenderEmail {
             }
         };
 
-        Transport transport = null;
+        StringBuilder message = new StringBuilder();
+        address = address.replace(",", ";");
 
-        try {
-            Session session = Session.getDefaultInstance(properties, authenticator);
+        for (String addressTo: address.split(";")) {
+            try {
+                Session session = Session.getDefaultInstance(properties, authenticator);
 
-            MimeMessage message = new MimeMessage(session);
+                MimeMessage mail = new MimeMessage(session);
 
-            // Set the from address
-            message.setFrom(new InternetAddress("scaneburg@rgsbank.ru"));
-            // Set the to address
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress("d.v.hozyashev@rgsbank.ru"));
-            // Set the subject
-            message.setSubject("Test");
-            // Set the content
-            message.setText("Test");
-            // Send message
-            Transport.send(message);
+                // Set the from address
+                mail.setFrom(new InternetAddress("scaneburg@rgsbank.ru"));
+                // Set the to address
+                mail.addRecipient(Message.RecipientType.TO, new InternetAddress(addressTo));
+                // Set the subject
+                mail.setSubject("Test");
+                // Set the content
+                mail.setText("Test");
+                // Send message
+                Transport.send(mail);
 
-            logger.debug("Письмо отправлено");
-        } catch (MessagingException e) {
-            logger.debug(String.format("Ошибка при отправке письма: %s", e.getMessage()));
+                message.append(String.format("%s : письмо отправлено", addressTo));
+                logger.debug("Письмо отправлено");
+
+            } catch (MessagingException e) {
+                message.append(String.format("%s : Ошибка при отправке письма: %s", addressTo, e.getMessage()));
+                logger.debug(String.format("Ошибка при отправке письма: %s", e.getMessage()));
+            }
         }
 
+        return message.toString();
     }
 }

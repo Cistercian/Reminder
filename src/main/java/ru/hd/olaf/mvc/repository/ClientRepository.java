@@ -13,6 +13,11 @@ public interface ClientRepository extends JpaRepository<Client, Integer>{
 
     Client findByName(String name);
 
+    long count();
+
+    @Query("SELECT COUNT(c) FROM Client c WHERE c.updateDate IS NULL OR DATEDIFF(CURRENT_DATE, c.updateDate) > 365")
+    Long getCountOverdue();
+
     @Query("SELECT c FROM Client c WHERE c.updateDate IS NULL OR DATEDIFF(CURRENT_DATE, c.updateDate) > 365")
     List<Client> getOverdue();
 }
