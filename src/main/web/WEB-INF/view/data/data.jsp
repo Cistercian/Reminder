@@ -77,51 +77,48 @@
                 <div class="panel-body ">
                     <div class="panel panel-default wam-margin-panel">
                         <div class="panel-heading wam-page-title">
-                            <h4 class="wam-margin-bottom-0 wam-margin-top-0">Настройки структуры загружаемых файлов:</h4>
+                            <h4 class="wam-margin-bottom-0 wam-margin-top-0">Настройки структуры загружаемых файлов (номера используемых столбцов):</h4>
                         </div>
                         <div class="panel-body ">
-                            <div class="col-xs-12">
-                                <h4><strong>Номера используемых столбцов:</strong></h4>
-                            </div>
                             <div class="row">
                                 <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Наименование клиента</h4>
+                                    <h5>Наименование клиента</h5>
                                 </div>
                                 <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="columnName" type="number" class="form-control wam-text-size-1" value="${columnName}"/>
+                                        <input id="columnName" type="number" class="form-control wam-text-size-2" value="${columnName}"/>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Дата заведения клиента</h4>
+                                    <h5>Дата заведения клиента</h5>
                                 </div>
                                 <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="columnCreateDate" type="number" class="form-control wam-text-size-1" value="${columnCreateDate}"/>
+                                        <input id="columnCreateDate" type="number" class="form-control wam-text-size-2" value="${columnCreateDate}"/>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Дата обновления анкеты</h4>
+                                    <h5>Дата обновления анкеты</h5>
                                 </div>
                                 <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="columnUpdateDate" type="number" class="form-control wam-text-size-1" value="${columnUpdateDate}"/>
+                                        <input id="columnUpdateDate" type="number" class="form-control wam-text-size-2" value="${columnUpdateDate}"/>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Код подразделения</h4>
+                                    <h5>Код подразделения</h5>
                                 </div>
                                 <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="columnBranchCode" type="number" class="form-control wam-text-size-1" value="${columnBranchCode}"/>
+                                        <input id="columnBranchCode" type="number" class="form-control wam-text-size-2" value="${columnBranchCode}"/>
                                     </div>
                                 </div>
                             </div>
@@ -134,65 +131,180 @@
                         </div>
                         <div class="panel-body ">
                             <div class="row">
-                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Адрес сервера</h4>
+                                <div class="col-xs-12 col-md-3 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Адрес сервера</h5>
+                                </div>
+                                <div class="col-xs-2 col-md-1">
+                                    <p class="wam-margin-top-1">
+                                        <img src="/resources/img/help.png" class="img-responsive wam-top-radius center-block"
+                                             alt="" data-toggle="collapse" data-target="#helpSmtpHost">
+                                    </p>
                                 </div>
                                 <div class="col-xs-12 col-md-8 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="smtpHost" type="text" class="form-control wam-text-size-1" value="${smtpHost}"/>
+                                        <input id="smtpHost" type="text" class="form-control wam-text-size-2" value="${smtpHost}"/>
+                                    </div>
+                                </div>
+                                <div id="helpSmtpHost" class="col-xs-12 col-md-12 wam-not-padding-xs collapse">
+                                    <div class="panel panel-default">
+                                        <div class="wam-not-padding panel-body">
+                                            <div class="col-xs-12 col-md-12">
+                                                <p class="wam-margin-top-2 text-justify">
+                                                    Здесь необходимо указать адрес почтового сервера. Принципиально обмен должен осущесвтляться по протоколу smpt.
+                                                </p>
+                                                <p>
+                                                    Например: mskmail.msk.russb.org
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Номер порта</h4>
+                                <div class="col-xs-12 col-md-3 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Номер порта</h5>
+                                </div>
+                                <div class="col-xs-2 col-md-1">
+                                    <p class="wam-margin-top-1">
+                                        <img src="/resources/img/help.png" class="img-responsive wam-top-radius center-block"
+                                             alt="" data-toggle="collapse" data-target="#helpSmtpPort">
+                                    </p>
                                 </div>
                                 <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="smtpPort" type="text" class="form-control wam-text-size-1" value="${smtpPort}"/>
+                                        <input id="smtpPort" type="number" class="form-control wam-text-size-2" value="${smtpPort}"/>
+                                    </div>
+                                </div>
+                                <div id="helpSmtpPort" class="col-xs-12 col-md-12 wam-not-padding-xs collapse">
+                                    <div class="panel panel-default">
+                                        <div class="wam-not-padding panel-body">
+                                            <div class="col-xs-12 col-md-12">
+                                                <p class="wam-margin-top-2 text-justify">
+                                                    Здесь необходимо указать порт для подключения к почтовому серверу.
+                                                </p>
+                                                <p>
+                                                    Например стандартный порт для протокола smtp: 25
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Имя пользователя для авторизации</h4>
+                                <div class="col-xs-12 col-md-3 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Имя пользователя для авторизации</h5>
+                                </div>
+                                <div class="col-xs-2 col-md-1">
+                                    <p class="wam-margin-top-1">
+                                        <img src="/resources/img/help.png" class="img-responsive wam-top-radius center-block"
+                                             alt="" data-toggle="collapse" data-target="#helpSmtpLogin">
+                                    </p>
                                 </div>
                                 <div class="col-xs-12 col-md-6 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="smtpLogin" type="text" class="form-control wam-text-size-1" value="${smtpLogin}"/>
+                                        <input id="smtpLogin" type="text" class="form-control wam-text-size-2" value="${smtpLogin}"/>
+                                    </div>
+                                </div>
+                                <div id="helpSmtpLogin" class="col-xs-12 col-md-12 wam-not-padding-xs collapse">
+                                    <div class="panel panel-default">
+                                        <div class="wam-not-padding panel-body">
+                                            <div class="col-xs-12 col-md-12">
+                                                <p class="wam-margin-top-2 text-justify">
+                                                    Здесь необходимо указать имя пользователя, который имеет право подключаться к серверу по указанному порту. Обратите внимание на то, что часто политика безопасности ограничивает
+                                                    список таких учетных записей, поэтому их необходимо согласовывать с администраторами почтового сервера. Не забывайте указывать домен
+                                                </p>
+                                                <p>
+                                                    Например: E-BURG\scaneburg
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Пароль для авторизации</h4>
+                                <div class="col-xs-12 col-md-3 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Пароль для авторизации</h5>
+                                </div>
+                                <div class="col-xs-2 col-md-1">
+                                    <p class="wam-margin-top-1">
+                                        <img src="/resources/img/help.png" class="img-responsive wam-top-radius center-block"
+                                             alt="" data-toggle="collapse" data-target="#helpSmtpPassword">
+                                    </p>
                                 </div>
                                 <div class="col-xs-12 col-md-6 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="smtpPassword" type="password" class="form-control wam-text-size-1" value="${smtpPassword}"/>
+                                        <input id="smtpPassword" type="password" class="form-control wam-text-size-2" value="${smtpPassword}"/>
+                                    </div>
+                                </div>
+                                <div id="helpSmtpPassword" class="col-xs-12 col-md-12 wam-not-padding-xs collapse">
+                                    <div class="panel panel-default">
+                                        <div class="wam-not-padding panel-body">
+                                            <div class="col-xs-12 col-md-12">
+                                                <p class="wam-margin-top-2 text-justify">
+                                                    Пароль для указанной выше учетной записи.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Адрес отправителя</h4>
+                                <div class="col-xs-12 col-md-3 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Адрес отправителя</h5>
+                                </div>
+                                <div class="col-xs-2 col-md-1">
+                                    <p class="wam-margin-top-1">
+                                        <img src="/resources/img/help.png" class="img-responsive wam-top-radius center-block"
+                                             alt="" data-toggle="collapse" data-target="#helpSmtpSender">
+                                    </p>
                                 </div>
                                 <div class="col-xs-12 col-md-6 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="smtpSender" type="text" class="form-control wam-text-size-1" value="${smtpSender}"/>
+                                        <input id="smtpSender" type="text" class="form-control wam-text-size-2" value="${smtpSender}"/>
+                                    </div>
+                                </div>
+                                <div id="helpSmtpSender" class="col-xs-12 col-md-12 wam-not-padding-xs collapse">
+                                    <div class="panel panel-default">
+                                        <div class="wam-not-padding panel-body">
+                                            <div class="col-xs-12 col-md-12">
+                                                <p class="wam-margin-top-2 text-justify">
+                                                    Здесь необходимо указать почтовый адрес отправителя, который будет отображаться в отправляемых письмах. Адрес должен быть реален, т.к. на сервере наверняка установлена проверка
+                                                    соответствия имени пользователя, указанного выше, с существующей записью на почтовом сервере.
+                                                </p>
+                                                <p>
+                                                    Например: scaneburg@rgsbank.ru
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h4>Тема письма</h4>
+                                <div class="col-xs-12 col-md-3 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Тема письма</h5>
+                                </div>
+                                <div class="col-xs-2 col-md-1">
+                                    <p class="wam-margin-top-1">
+                                        <img src="/resources/img/help.png" class="img-responsive wam-top-radius center-block"
+                                             alt="" data-toggle="collapse" data-target="#helpSmtpTitle">
+                                    </p>
                                 </div>
                                 <div class="col-xs-12 col-md-8 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
-                                        <input id="smtpTitle" type="text" class="form-control wam-text-size-1" value="${smtpTitle}"/>
+                                        <input id="smtpTitle" type="text" class="form-control wam-text-size-2" value="${smtpTitle}"/>
                                     </div>
                                 </div>
-
+                                <div id="helpSmtpTitle" class="col-xs-12 col-md-12 wam-not-padding-xs collapse">
+                                    <div class="panel panel-default">
+                                        <div class="wam-not-padding panel-body">
+                                            <div class="col-xs-12 col-md-12">
+                                                <p class="wam-margin-top-2 text-justify">
+                                                    Укажите тему, с которой будут отправляться письма.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -206,7 +318,7 @@
                         </div>
                         <div class="col-xs-12 col-md-6">
                             <button type="submit" class="btn-default btn-lg btn-block wam-btn-2"
-                                    onclick="location.href='/data/data'; return false;">
+                                    onclick="location.href='/data'; return false;">
                                 Отмена
                             </button>
                         </div>

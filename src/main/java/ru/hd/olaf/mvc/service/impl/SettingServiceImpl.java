@@ -10,9 +10,7 @@ import ru.hd.olaf.mvc.repository.SettingRepository;
 import ru.hd.olaf.mvc.service.SettingService;
 import ru.hd.olaf.util.LogUtil;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by d.v.hozyashev on 17.08.2017.
@@ -48,5 +46,29 @@ public class SettingServiceImpl implements SettingService{
         }
 
         return properties;
+    }
+
+    public Set<String> getNamesAll() {
+        Set<String> settings = getNamesColumns();
+
+        settings.add("smtpHost");
+        settings.add("smtpPort");
+        settings.add("smtpLogin");
+        settings.add("smtpPassword");
+        settings.add("smtpSender");
+        settings.add("smtpTitle");
+
+        return settings;
+    }
+
+    public Set<String> getNamesColumns() {
+        Set<String> settings = new HashSet<String>();
+
+        settings.add("columnName");
+        settings.add("columnCreateDate");
+        settings.add("columnUpdateDate");
+        settings.add("columnBranchCode");
+
+        return settings;
     }
 }

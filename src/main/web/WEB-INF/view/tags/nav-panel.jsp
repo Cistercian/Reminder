@@ -24,14 +24,12 @@
 
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav navbar-left">
+                <!--<ul id="tabs" class="nav nav-tabs navbar-nav navbar-left">-->
                 <li><a href="/">Главная</a></li>
-                <li><a href="/data">Данные</a></li>
-
+                <li><a href="/data">Настройки</a></li>
             </ul>
 
         </div><!-- /.navbar-collapse -->
-        <div id="alerts" class="wam-ontop col-sm-6 col-sm-offset-6">
-        </div>
     </nav>
 </header>
 

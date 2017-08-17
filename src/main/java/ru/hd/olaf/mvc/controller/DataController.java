@@ -27,15 +27,13 @@ public class DataController {
     @Autowired
     private SettingService settingService;
 
-    private final static Set<String> settings = initSettingsSet();
-
     private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
     @RequestMapping(value = "/data", method = RequestMethod.GET)
     public String getViewData(Model model) {
         logger.debug(LogUtil.getMethodName());
 
-        for (String param : settings) {
+        for (String param : settingService.getNamesAll()) {
             Setting value = settingService.getByName(param);
 
             if (value != null) {
@@ -73,22 +71,5 @@ public class DataController {
         }
 
         return response;
-    }
-
-    private static Set<String> initSettingsSet() {
-        Set<String> settings = new HashSet<String>();
-
-        settings.add("columnName");
-        settings.add("columnCreateDate");
-        settings.add("columnUpdateDate");
-        settings.add("columnBranchCode");
-        settings.add("smtpHost");
-        settings.add("smtpPort");
-        settings.add("smtpLogin");
-        settings.add("smtpPassword");
-        settings.add("smtpSender");
-        settings.add("smtpTitle");
-
-        return settings;
     }
 }

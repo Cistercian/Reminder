@@ -30,7 +30,9 @@
     <!--DataTables-->
     <spring:url value="/resources/js/jquery.dataTables.min.js" var="js"/>
     <script src="${js}"></script>
-
+    <!--Диаграмма-->
+    <spring:url value="/resources/js/Chart.min.js" var="js"/>
+    <script src="${js}"></script>
     <!--custom functions-->
     <spring:url value="/resources/js/web.account.functions.js" var="js"/>
     <script src="${js}"></script>
@@ -42,24 +44,54 @@
 
 <script language="javascript" type="text/javascript">
     $(document).ready(function () {
+        $("#tabs li:eq(0) a").tab('show');
+
         if ($(response).val() != '') {
             displayMessage('message', $('#response').val());
         }
+
+        drawChartOfTypes('Общее кол-во клиентов=${countTotal},Просроченные анкеты=${countOverdue}', 'chartTotal')
 
         $.ajax({
             url: '/getStats',
             type: "GET",
             dataType: 'json',
             success: function (data) {
+                //данные для стилей прогресс баров
+                var styles = ['success', 'info', 'warning', 'danger'];
+                var curNumStyle = -1;
+                var maxCount = 0;
+                //массив для datatables
                 var tableData = new Array();
                 jQuery.each(data, function(index, data){
-                    /*                data.forEach(function (data, index, stats) {*/
+                    /*                data.forEach(function (data, index, stats) {  IE8...*/
                     var entity = new Array();
 
                     entity[0] = data.branchCode;
                     entity[1] = data.count;
 
                     tableData.push(entity);
+
+                    //рисуем прогресс бары
+                    maxCount = maxCount == 0 ? entity[1] : maxCount;
+                    normalCount = entity[1] * 100 / maxCount;
+                    curNumStyle = curNumStyle < 4 ? curNumStyle + 1 : 0;
+
+                    $('#bars').append(
+                            "<li class='list-unstyled'>" +
+                            "<div>" +
+                            "<h5><strong>Наименование подразделения " + entity[0] + "</strong>" +
+                            "<span class='pull-right text-muted' value='" + entity[1] + "'>" + entity[1] + " шт.</span></h5>" +
+                            "<div class='progress progress-striped active'> " +
+                            "<div class='progress-bar progress-bar-" + styles[curNumStyle] + "' role='progressbar' " +
+                            "aria-valuenow='" + entity[1] + "' aria-valuemin='0' aria-valuemax='100' " +
+                            "style='width: " + normalCount + "%' value='" + entity[0] + "'>" +
+                            "<span class='sr-only'>" + entity[1] + "</span>" +
+                            "</div>" +
+                            "</div>" +
+                            "</div>" +
+                            "</li>"
+                    );
                 });
 
                 $('#bodyTable').append(
@@ -166,44 +198,50 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-xs-12 col-md-6">
-                            <p class='wam-margin-top-3 text-justify'>Текущее кол-во клиентов в БД:</p>
+                            <div class="col-xs-12 col-md-11">
+                                <p class='wam-margin-top-3 text-justify'><span class="glyphicon glyphicon-stop wam-color-income"></span><span> Текущее кол-во клиентов в БД:</span></p>
+                            </div>
+                            <div class="col-xs-12 col-md-1">
+                                <p class='wam-margin-top-3 text-justify'><strong>${countTotal}</strong></p>
+                            </div>
+                            <div class="col-xs-12 col-md-11">
+                                <p class='text-justify'><span class="glyphicon glyphicon-stop wam-color-expense"></span><span> Кол-во клиентов, по которым необходимо обновить анкету:</span></p>
+                            </div>
+                            <div class="col-xs-12 col-md-1">
+                                <p class='text-justify'><strong>${countOverdue}</strong></p>
+                            </div>
+
+                            <form:form action="data/import" enctype="multipart/form-data" useToken="true">
+                                <div class="row wam-margin-top-2">
+                                    <div class="col-xs-12 col-md-12 wam-not-padding-xs">
+                                        <p class='text-justify wam-margin-top-2'><strong>Импорт данных из ЦФТ</strong></p>
+                                        <div class="input-group ">
+                                            <label class="input-group-btn">
+												<span class="btn btn-primary ">
+													Выбрать файл&hellip;
+                                                    <input type="file" style="display: none;" multiple name="file">
+												</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-12 col-md-12 wam-not-padding-xs">
+                                        <button type="submit" class="btn-danger btn-lg btn-block wam-btn-2"
+                                                onclick="history.pushState({}, null, '/');">
+                                            Импортировать
+                                        </button>
+                                    </div>
+                                </div>
+                            </form:form>
                         </div>
                         <div class="col-xs-12 col-md-6">
-                            <p class='wam-margin-top-3 text-justify'><strong>${countTotal}</strong></p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-12 col-md-6">
-                            <p class='text-justify'>Кол-во клиентов, по которым необходимо обновить анкету:</p>
-                        </div>
-                        <div class="col-xs-12 col-md-6">
-                            <p class='text-justify'><strong>${countOverdue}</strong></p>
+                            <canvas id="chartTotal"></canvas>
                         </div>
                     </div>
 
-                    <form:form action="data/import" enctype="multipart/form-data" useToken="true">
-                        <div class="row wam-margin-top-2">
-                            <div class="col-xs-12 col-md-6 wam-not-padding-xs">
-                                <div class="input-group ">
-                                    <label class="input-group-btn">
-										<span class="btn btn-primary ">
-											Выбрать файл&hellip;
-                                            <input type="file" style="display: none;" multiple name="file">
-										</span>
-                                    </label>
-                                    <input type="text" class="form-control" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-12 col-md-6 wam-not-padding-xs">
-                                <button type="submit" class="btn-danger btn-lg btn-block wam-btn-2"
-                                        onclick="history.pushState({}, null, '/');">
-                                    Импортировать
-                                </button>
-                            </div>
-                        </div>
-                    </form:form>
+
                 </div>
             </div>
 
@@ -212,34 +250,45 @@
                     <h3 class="wam-margin-bottom-0 wam-margin-top-0">Отчеты</h3>
                 </div>
                 <div class="panel-body">
-                    <div id="bodyTable" class="panel-body">
-                    </div>
 
-                    <div class="col-xs-12">
-                        <p class="wam-margin-top-2">
+                    <ul id="tabs" class="nav nav-tabs">
+                        <li><a data-toggle="tab" href="#panelTable">Таблица</a></li>
+                        <li><a data-toggle="tab" href="#panelBars">Прогресс бары</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="panelTable" class="tab-pane fade in active">
+                            <div id="bodyTable" class="panel-body"></div>
+                        </div>
+                        <div id="panelBars" class="tab-pane fade in active">
+                            <div id="bars" class="panel-body"></div>
+                        </div>
+
+                        <div class="col-xs-12">
+                            <hr>
+                            <p class="wam-margin-top-2">
 							<span>
 								Информацию о клиентах, анкеты которых подлежат пересмотру, Вы можете отправить письмом или
 								загрузить в виде файла.
 							</span>
-                        </p>
-                    </div>
-                    <div class="col-xs-12 col-md-6">
-                        <button type="submit" class="btn-primary btn-lg btn-block wam-btn-2"
-                                onclick="displayMessage('sendEmail', ''); return false;">
-                            Отправить почтой
-                        </button>
-                    </div>
-                    <div class="col-xs-12 col-md-6">
-                        <button type="submit" class="btn-default btn-lg btn-block wam-btn-2"
-                                onclick="location.href='/data/overdue'; return false;">
-                            Выгрузить файл
-                        </button>
+                            </p>
+                        </div>
+                        <div class="col-xs-12 col-md-6">
+                            <button type="submit" class="btn-primary btn-lg btn-block wam-btn-2"
+                                    onclick="displayMessage('sendEmail', ''); return false;">
+                                Отправить почтой
+                            </button>
+                        </div>
+                        <div class="col-xs-12 col-md-6">
+                            <button type="submit" class="btn-default btn-lg btn-block wam-btn-2"
+                                    onclick="location.href='/data/overdue'; return false;">
+                                Выгрузить файл
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 </body>
 </html>

@@ -183,10 +183,18 @@ public class IndexController {
 
     private String parsingExcelFile(MultipartFile file) {
         logger.debug(LogUtil.getMethodName());
+        StringBuilder message = new StringBuilder();
+        String text;
+
+        if (!checkSettings()) {
+            text = "Ошибка: нет настроек структуры загружаемых файлов.<p> Перейдите на страницу \"Настройки\" и укажите номера считываемых столбцов";
+            logger.debug(text);
+
+            return text;
+        }
 
         int errors = 0;
         int total;
-        String message;
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
@@ -198,20 +206,20 @@ public class IndexController {
                 logger.debug(String.format("Парсинг строки %d из %d", numRow, total));
                 XSSFRow row = sheet.getRow(numRow);
                 try {
-                    int column = Integer.parseInt(settingService.getByName("columnBranchCode").getValue());
+                    int column = Integer.parseInt(settingService.getByName("columnBranchCode").getValue()) - 1;
                     Branch branch = branchService.getExistOrCreate(row.getCell(column).getStringCellValue());
 
                     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
 
                     Date createDate;
-                    column = Integer.parseInt(settingService.getByName("columnCreateDate").getValue());
+                    column = Integer.parseInt(settingService.getByName("columnCreateDate").getValue()) - 1;
                     if (row.getCell(1).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
                         createDate = row.getCell(column).getDateCellValue();
                     else
                         createDate = sdf.parse(row.getCell(column).getStringCellValue());
 
                     Date updateDate;
-                    column = Integer.parseInt(settingService.getByName("columnUpdateDate").getValue());
+                    column = Integer.parseInt(settingService.getByName("columnUpdateDate").getValue()) - 1;
                     if (row.getCell(2).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
                         updateDate = row.getCell(column).getDateCellValue();
                     else
@@ -219,7 +227,7 @@ public class IndexController {
                                 sdf.parse(row.getCell(column).getStringCellValue()) :
                                 null;
 
-                    column = Integer.parseInt(settingService.getByName("columnName").getValue());
+                    column = Integer.parseInt(settingService.getByName("columnName").getValue()) - 1;
                     Client client = new Client(
                             row.getCell(column).getStringCellValue(),
                             createDate,
@@ -232,25 +240,46 @@ public class IndexController {
                     clientService.createOrUpdate(client);
 
                 } catch (ParseException e) {
-                    logger.debug(String.format("Возникла ошибка при парсинге даты: %s", e.getMessage()));
+                    text = String.format("Строка: %d: Возникла ошибка при разборе столбца с датой: %s <p>", numRow + 1, e.getMessage());
                     errors++;
+
+                    logger.debug(text);
+                    message.append(text);
                 } catch (NullPointerException e) {
+                    text = String.format("Строка: %d: Ошибка настроек: NullPointExceptions %s <p>", numRow + 1, e.getMessage());
+                    errors++;
+
+                    logger.debug(text);
+                    message.append(text);
                     e.printStackTrace();
-                    logger.debug(String.format("Ошибка настроек: NullPointExceptions %s", e.getMessage()));
-                    errors++;
                 } catch (IllegalStateException e) {
-                    logger.debug(String.format("Ошибка настроек: %s", e.getMessage()));
+                    text = String.format("Строка: %d: Ошибка настроек: %s <p>", numRow + 1, e.getMessage());
                     errors++;
+
+                    message.append(text);
+                    e.printStackTrace();
                 }
             }
 
-            message = String.format("Импорт завершен. Импортировано %d объектов, всего строк в файле: %d",
-                    total - errors, total);
+            text = String.format("Импорт завершен. Импортировано %d объектов, всего строк в файле: %d <p><p>",
+                            total - errors + 1, total + 1);
+            message.insert(0, text);
 
         } catch (IOException e) {
-            message = String.format("Возникла ошибка при чтении файла: %s", e.getMessage());
-            logger.debug(message);
+            text = String.format("Возникла ошибка при чтении файла: %s <p>", e.getMessage());
+            logger.debug(text);
+            message.append(text);
         }
-        return message;
+
+        return message.toString();
+    }
+
+    private boolean checkSettings(){
+        for (String setting : settingService.getNamesColumns()) {
+            if (settingService.getByName(setting) == null)
+                return false;
+        }
+
+        return true;
     }
 }
