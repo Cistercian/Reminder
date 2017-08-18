@@ -50,10 +50,10 @@
             displayMessage('message', $('#response').val());
         }
 
-        drawChartOfTypes('Общее кол-во клиентов=${countTotal},Просроченные анкеты=${countOverdue}', 'chartTotal')
+        drawChartOfTypes('Кол-во обработанных клиентов=${countTotal},Количество ошибок=${countOverdue}', 'chartTotal')
 
         $.ajax({
-            url: '/getStats',
+            url: '/getStats?type=all',
             type: "GET",
             dataType: 'json',
             success: function (data) {
@@ -102,11 +102,11 @@
 
                 var table = $('#stats').DataTable({
                     responsive: true,
-                    "bLengthChange": false,
+                    "bLengthChange": true,
                     language: {
                         "processing": "Подождите...",
                         "search": "Поиск:",
-                        "lengthMenu": "Показать _MENU_ записей",
+                        "lengthMenu": "Показать по _MENU_ записей",
                         "info": "Записи с _START_ до _END_ (Всего записей: _TOTAL_).",
                         "infoEmpty": "Записи с 0 до 0 из 0 записей",
                         "infoFiltered": "(отфильтровано из _MAX_ записей)",
@@ -131,24 +131,56 @@
                         { title: "Количество просроченных анкет" }
                     ],
                     "sort": true,
-                    "order": [[0, "DESC"]]
+                    "order": [[1, "DESC"]]
                 });
 
                 $('#stats_filter').empty();
-                $('#stats_filter').append(
-                        "<div class='col-xs-2 col-md-4 wam-padding-left-0 wam-padding-right-0'>" +
-                        "<h5>Поиск: </h5>" +
-                        "</div>" +
-                        "<div class='col-xs-10 col-md-8 wam-padding-left-0 wam-padding-right-0'>" +
-                        "<input id='searchDataTable' type='text' class='form-control form' placeholder='' aria-controls='stats'>" +
-                        "</div>"
-                );
-                $('#searchDataTable').on( 'keyup', function () {
-                    table.search( this.value ).draw();
-                });
             }
         });
     });
+
+    function drawBars(url){
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: 'json',
+            success: function (data) {
+                //данные для стилей прогресс баров
+                var styles = ['success', 'info', 'warning', 'danger'];
+                var curNumStyle = -1;
+                var maxCount = 0;
+
+                $('#bars').empty();
+                jQuery.each(data, function(index, data){
+                    var entity = new Array();
+
+                    entity[0] = data.branchCode;
+                    entity[1] = data.count;
+
+                    //рисуем прогресс бары
+                    maxCount = maxCount == 0 ? entity[1] : maxCount;
+                    normalCount = entity[1] * 100 / maxCount;
+                    curNumStyle = curNumStyle < 4 ? curNumStyle + 1 : 0;
+
+                    $('#bars').append(
+                            "<li class='list-unstyled'>" +
+                            "<div>" +
+                            "<h5><strong>Наименование подразделения " + entity[0] + "</strong>" +
+                            "<span class='pull-right text-muted' value='" + entity[1] + "'>" + entity[1] + " шт.</span></h5>" +
+                            "<div class='progress progress-striped active'> " +
+                            "<div class='progress-bar progress-bar-" + styles[curNumStyle] + "' role='progressbar' " +
+                            "aria-valuenow='" + entity[1] + "' aria-valuemin='0' aria-valuemax='100' " +
+                            "style='width: " + normalCount + "%' value='" + entity[0] + "'>" +
+                            "<span class='sr-only'>" + entity[1] + "</span>" +
+                            "</div>" +
+                            "</div>" +
+                            "</div>" +
+                            "</li>"
+                    );
+                });
+            }
+        })
+    }
     $(function () {
         $(document).on('change', ':file', function () {
             var input = $(this),
@@ -205,7 +237,7 @@
                                 <p class='wam-margin-top-3 text-justify'><strong>${countTotal}</strong></p>
                             </div>
                             <div class="col-xs-12 col-md-11">
-                                <p class='text-justify'><span class="glyphicon glyphicon-stop wam-color-expense"></span><span> Кол-во клиентов, по которым необходимо обновить анкету:</span></p>
+                                <p class='text-justify'><span class="glyphicon glyphicon-stop wam-color-expense"></span><span> Кол-во ошибок:</span></p>
                             </div>
                             <div class="col-xs-12 col-md-1">
                                 <p class='text-justify'><strong>${countOverdue}</strong></p>
@@ -229,7 +261,7 @@
                                 <div class="row">
                                     <div class="col-xs-12 col-md-12 wam-not-padding-xs">
                                         <button type="submit" class="btn-danger btn-lg btn-block wam-btn-2"
-                                                onclick="history.pushState({}, null, '/');">
+                                                onclick="displayLoader();history.pushState({}, null, '/');">
                                             Импортировать
                                         </button>
                                     </div>
@@ -252,8 +284,11 @@
                 <div class="panel-body">
 
                     <ul id="tabs" class="nav nav-tabs">
-                        <li><a data-toggle="tab" href="#panelTable">Таблица</a></li>
-                        <li><a data-toggle="tab" href="#panelBars">Прогресс бары</a></li>
+                        <li><a data-toggle="tab" href="#panelTable">Ошибки итого</a></li>
+                        <li><a data-toggle="tab" href="#panelBars" onclick="drawBars('/getStats?type=all')">Проц.соотношение</a></li>
+                        <li><a data-toggle="tab" href="#panelBars" onclick="drawBars('/getStats?type=overdue')">Просроченные анкеты</a></li>
+                        <li><a data-toggle="tab" href="#panelBars" onclick="drawBars('/getStats?type=risk')">Пустые степени риска</a></li>
+                        <li><a data-toggle="tab" href="#panelBars" onclick="drawBars('/getStats?type=rating')">Ошибки в оценке риска</a></li>
                     </ul>
                     <div class="tab-content">
                         <div id="panelTable" class="tab-pane fade in active">

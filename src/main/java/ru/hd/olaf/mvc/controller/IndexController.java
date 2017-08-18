@@ -1,6 +1,8 @@
 package ru.hd.olaf.mvc.controller;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -21,7 +23,7 @@ import ru.hd.olaf.mvc.service.ClientService;
 import ru.hd.olaf.mvc.service.SettingService;
 import ru.hd.olaf.util.JsonResponse;
 import ru.hd.olaf.util.LogUtil;
-import ru.hd.olaf.util.OverdueGroupEntity;
+import ru.hd.olaf.util.ErrorsCountEntity;
 import ru.hd.olaf.xls.XLSGenerator;
 
 import javax.servlet.http.HttpServletResponse;
@@ -29,9 +31,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by d.v.hozyashev on 16.08.2017.
@@ -53,7 +53,7 @@ public class IndexController {
         logger.debug(LogUtil.getMethodName());
 
         model.addAttribute("countTotal", clientService.getCountTotal());
-        model.addAttribute("countOverdue", clientService.getCountOverdue());
+        model.addAttribute("countOverdue", clientService.getCountErrors());
 
         return "index";
     }
@@ -68,8 +68,12 @@ public class IndexController {
         try {
             Map<String, String> settings = settingService.getSettings();
 
-            InputStream inputStream = new ByteArrayInputStream(XLSGenerator
-                    .getXLSByteArray(clientService.getOverdueClients()).toByteArray());
+            InputStream inputStream = new ByteArrayInputStream(
+                    XLSGenerator.createXLSByteArray(
+                            clientService.getOverdueClients(),
+                            clientService.getRiskClients(),
+                            clientService.getRatingClients()
+                    ).toByteArray());
 
             response = new JsonResponse(SenderEmail.sendEmail(address, inputStream, settings));
         } catch (IOException e) {
@@ -92,40 +96,31 @@ public class IndexController {
             response = "Не найден импортируемый файл.";
 
         model.addAttribute("countTotal", clientService.getCountTotal());
-        model.addAttribute("countOverdue", clientService.getCountOverdue());
+        model.addAttribute("countOverdue", clientService.getCountErrors());
         model.addAttribute("response", response);
 
         return "index";
     }
 
-    @RequestMapping(value = "/data/overdue", method = RequestMethod.GET)
-    public void getRepost(HttpServletResponse response) {
-        logger.debug(LogUtil.getMethodName());
-
-        try {
-            ByteArrayOutputStream bytesOutput = XLSGenerator.getXLSByteArray(clientService.getOverdueClients());
-
-            InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(bytesOutput.toByteArray()));
-
-            response.setContentType("application/x-download");
-            response.setContentLength(bytesOutput.size());
-            response.setHeader("Content-disposition", "attachment; filename=\"overdue1.xls\"");
-
-            org.apache.commons.io.IOUtils.copy(inputStream, response.getOutputStream());
-            response.getOutputStream().close();
-
-            logger.debug("Обработка завершена - сформированные данные переданы в response");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @RequestMapping(value = "/getStats", method = RequestMethod.GET)
     public
     @ResponseBody
-    List<OverdueGroupEntity> getStats() {
+    List<ErrorsCountEntity> getStats(@RequestParam(value = "type") String type) {
         logger.debug(LogUtil.getMethodName());
-        return clientService.getStats();
+
+        List<ErrorsCountEntity> errors = new ArrayList<ErrorsCountEntity>();
+
+        if ("all".equals(type))
+            errors = clientService.getStats();
+        else if ("overdue".equals(type))
+            errors = clientService.getErrorsOverdue();
+        else if ("risk".equals(type))
+            errors = clientService.getErrorsRisk();
+        else if ("rating".equals(type))
+            errors = clientService.getErrorsRating();
+
+        sortErrors(errors);
+        return errors;
     }
 
     /**
@@ -183,20 +178,33 @@ public class IndexController {
 
     private String parsingExcelFile(MultipartFile file) {
         logger.debug(LogUtil.getMethodName());
+
         StringBuilder message = new StringBuilder();
         String text;
 
         if (!checkSettings()) {
             text = "Ошибка: нет настроек структуры загружаемых файлов.<p> Перейдите на страницу \"Настройки\" и укажите номера считываемых столбцов";
             logger.debug(text);
-
             return text;
         }
 
+        Map<String, Branch> branches = new HashMap<String, Branch>();
+        Map<String, String> settings = settingService.getSettings();
         int errors = 0;
         int total;
 
         try {
+            //удаление старых данных
+            try {
+                clientService.deleteAllData();
+            } catch (Exception e) {
+                text = String.format("Ошибка удаления текущих данных БД: %s <p>",
+                        ExceptionUtils.getRootCause(e).getMessage());
+
+                logger.debug(text);
+                return text;
+            }
+
             XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
             XSSFSheet sheet = workbook.getSheetAt(0);
 
@@ -206,20 +214,30 @@ public class IndexController {
                 logger.debug(String.format("Парсинг строки %d из %d", numRow, total));
                 XSSFRow row = sheet.getRow(numRow);
                 try {
-                    int column = Integer.parseInt(settingService.getByName("columnBranchCode").getValue()) - 1;
-                    Branch branch = branchService.getExistOrCreate(row.getCell(column).getStringCellValue());
+                    int column = Integer.parseInt(settings.get("columnBranchCode")) - 1;
+                    String branchName = row.getCell(column).getStringCellValue();
+
+                    if (!branches.containsKey(branchName)) {
+                        Branch branch = branchService.getExistOrCreate(branchName);
+                        if (branch != null)
+                            branches.put(branchName, branch);
+                        else
+                            throw new NullPointerException(String.format("Ошибка поиска подразделения: %s", branchName));
+                    }
 
                     SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
 
                     Date createDate;
-                    column = Integer.parseInt(settingService.getByName("columnCreateDate").getValue()) - 1;
+                    column = Integer.parseInt(settings.get("columnCreateDate")) - 1;
                     if (row.getCell(1).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
                         createDate = row.getCell(column).getDateCellValue();
                     else
-                        createDate = sdf.parse(row.getCell(column).getStringCellValue());
+                        createDate = row.getCell(column).getStringCellValue() != null && row.getCell(column).getStringCellValue().length() > 0 ?
+                                sdf.parse(row.getCell(column).getStringCellValue()) :
+                                null;
 
                     Date updateDate;
-                    column = Integer.parseInt(settingService.getByName("columnUpdateDate").getValue()) - 1;
+                    column = Integer.parseInt(settings.get("columnUpdateDate")) - 1;
                     if (row.getCell(2).getCellType() == HSSFCell.CELL_TYPE_NUMERIC)
                         updateDate = row.getCell(column).getDateCellValue();
                     else
@@ -227,14 +245,13 @@ public class IndexController {
                                 sdf.parse(row.getCell(column).getStringCellValue()) :
                                 null;
 
-                    column = Integer.parseInt(settingService.getByName("columnName").getValue()) - 1;
                     Client client = new Client(
-                            row.getCell(column).getStringCellValue(),
+                            row.getCell(Integer.parseInt(settings.get("columnName")) - 1).getStringCellValue(),
                             createDate,
                             updateDate,
-                            //row.getCell(3).getStringCellValue(),
-                            //row.getCell(4).getStringCellValue(),
-                            branch
+                            row.getCell(Integer.parseInt(settings.get("columnRisk")) - 1).getStringCellValue(),
+                            row.getCell(Integer.parseInt(settings.get("columnRating")) - 1).getStringCellValue(),
+                            branches.get(branchName)
                     );
 
                     clientService.createOrUpdate(client);
@@ -256,8 +273,14 @@ public class IndexController {
                     text = String.format("Строка: %d: Ошибка настроек: %s <p>", numRow + 1, e.getMessage());
                     errors++;
 
+                    logger.debug(text);
                     message.append(text);
-                    e.printStackTrace();
+                } catch (RuntimeException e) {
+                    text = String.format("Строка: %d: ошибка при сохранении клиента в БД: %s <p>", numRow + 1, e.getMessage());
+                    errors++;
+
+                    logger.debug(text);
+                    message.append(text);
                 }
             }
 
@@ -267,6 +290,10 @@ public class IndexController {
 
         } catch (IOException e) {
             text = String.format("Возникла ошибка при чтении файла: %s <p>", e.getMessage());
+            logger.debug(text);
+            message.append(text);
+        } catch (NotOfficeXmlFileException e) {
+            text = String.format("Некорректный формат файла: %s <p>", e.getMessage());
             logger.debug(text);
             message.append(text);
         }
@@ -281,5 +308,13 @@ public class IndexController {
         }
 
         return true;
+    }
+
+    private void sortErrors(List<ErrorsCountEntity> errors){
+        Collections.sort(errors, new Comparator<ErrorsCountEntity>() {
+            public int compare(ErrorsCountEntity o1, ErrorsCountEntity o2) {
+                return o2.getCount().compareTo(o1.getCount());
+            }
+        });
     }
 }

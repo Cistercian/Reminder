@@ -1,6 +1,5 @@
 package ru.hd.olaf.xls;
 
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.slf4j.Logger;
@@ -18,9 +17,27 @@ public class XLSGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(XLSGenerator.class);
 
-    public static ByteArrayOutputStream getXLSByteArray(List<Client> clients) throws IOException {
+    public static ByteArrayOutputStream createXLSByteArray(List<Client> clientsOverdue,
+                                                           List<Client> clientsRisk,
+                                                           List<Client> clientsRating) throws IOException {
         Workbook book = new HSSFWorkbook();
-        Sheet sheet = book.createSheet("364-P");
+
+        fillSheet(book, "Просроченные анкеты", clientsOverdue);
+        fillSheet(book, "Некорректная степень риска", clientsRisk);
+        fillSheet(book, "Некорректная оценка риска", clientsRating);
+
+        ByteArrayOutputStream bytesOutput = new ByteArrayOutputStream();
+        book.write(bytesOutput);
+
+        logger.debug("Сохранили полученный xls файл в память.");
+        return bytesOutput;
+    }
+
+    private static void fillSheet(Workbook book,
+                                  String sheetName,
+                                  List<Client> clients){
+
+        Sheet sheet = book.createSheet(sheetName);
 
         //стили для отображения дат
         DataFormat format = book.createDataFormat();
@@ -45,14 +62,22 @@ public class XLSGenerator {
         name.setCellStyle(styleBorder);
 
         Cell createDate = row.createCell(1);
-        createDate.setCellValue("Дата заведения клиента");
+        createDate.setCellValue("Даты заполнения анкеты");
         createDate.setCellStyle(styleBorder);
 
         Cell updateDate = row.createCell(2);
         updateDate.setCellValue("Дата обновления анкеты");
         updateDate.setCellStyle(styleBorder);
 
-        Cell branchCode = row.createCell(3);
+        Cell risk = row.createCell(3);
+        risk.setCellValue("Степень риска");
+        risk.setCellStyle(styleBorder);
+
+        Cell rating = row.createCell(4);
+        rating.setCellValue("Оценка риска");
+        rating.setCellStyle(styleBorder);
+
+        Cell branchCode = row.createCell(5);
         branchCode.setCellValue("Код подразделения");
         branchCode.setCellStyle(styleBorder);
 
@@ -64,7 +89,10 @@ public class XLSGenerator {
             name = row.createCell(0);
             createDate = row.createCell(1);
             updateDate = row.createCell(2);
-            branchCode = row.createCell(3);
+            risk = row.createCell(3);
+            rating = row.createCell(4);
+            branchCode = row.createCell(5);
+
 
             name.setCellValue(client.getName());
 
@@ -75,11 +103,16 @@ public class XLSGenerator {
                 createDate.setCellValue(client.getCreateDate());
             if (client.getUpdateDate() != null)
                 updateDate.setCellValue(client.getUpdateDate());
-
+            if (client.getRisk() != null)
+                risk.setCellValue(client.getRisk());
+            if (client.getRating() != null)
+                rating.setCellValue(client.getRating());
             if (client.getBranch() != null)
                 branchCode.setCellValue(client.getBranch().getCode());
 
             name.setCellStyle(styleBorder);
+            risk.setCellStyle(styleBorder);
+            rating.setCellStyle(styleBorder);
             branchCode.setCellStyle(styleBorder);
         }
         // Меняем размер столбца
@@ -87,12 +120,6 @@ public class XLSGenerator {
         sheet.autoSizeColumn(1);
         sheet.autoSizeColumn(2);
         sheet.autoSizeColumn(3);
-
-        ByteArrayOutputStream bytesOutput = new ByteArrayOutputStream();
-
-        book.write(bytesOutput);
-
-        logger.debug("Сохранили полученный xls файл в память.");
-        return bytesOutput;
+        sheet.autoSizeColumn(5);
     }
 }

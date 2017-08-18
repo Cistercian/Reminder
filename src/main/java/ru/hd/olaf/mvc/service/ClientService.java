@@ -1,7 +1,7 @@
 package ru.hd.olaf.mvc.service;
 
 import ru.hd.olaf.entities.Client;
-import ru.hd.olaf.util.OverdueGroupEntity;
+import ru.hd.olaf.util.ErrorsCountEntity;
 
 import java.util.List;
 
@@ -18,9 +18,21 @@ public interface ClientService {
 
     Long getCountTotal();
 
-    Long getCountOverdue();
+    long getCountErrors();
 
     List<Client> getOverdueClients();
 
-    List<OverdueGroupEntity> getStats();
+    List<Client> getRiskClients();
+
+    List<Client> getRatingClients();
+
+    List<ErrorsCountEntity> getStats();
+
+    List<ErrorsCountEntity> getErrorsOverdue();
+
+    List<ErrorsCountEntity> getErrorsRisk();
+
+    List<ErrorsCountEntity> getErrorsRating();
+
+    void deleteAllData();
 }

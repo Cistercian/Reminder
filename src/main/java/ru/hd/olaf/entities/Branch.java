@@ -54,7 +54,7 @@ public class Branch {
         this.name = name;
     }
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "branch", cascade = CascadeType.REMOVE, orphanRemoval = false)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "branch", orphanRemoval = false)
     @JsonBackReference
     public Set<Client> getClients() {
         return clients;
@@ -62,5 +62,21 @@ public class Branch {
 
     public void setClients(Set<Client> clients) {
         this.clients = clients;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Branch branch = (Branch) o;
+
+        return code != null ? code.equals(branch.code) : branch.code == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return code != null ? code.hashCode() : 0;
     }
 }

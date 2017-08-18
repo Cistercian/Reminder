@@ -10,10 +10,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import ru.hd.olaf.entities.Setting;
+import ru.hd.olaf.mvc.service.ClientService;
 import ru.hd.olaf.mvc.service.SettingService;
 import ru.hd.olaf.util.JsonResponse;
 import ru.hd.olaf.util.LogUtil;
+import ru.hd.olaf.xls.XLSGenerator;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +30,8 @@ public class DataController {
 
     @Autowired
     private SettingService settingService;
+    @Autowired
+    private ClientService clientService;
 
     private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
@@ -71,5 +77,31 @@ public class DataController {
         }
 
         return response;
+    }
+
+    @RequestMapping(value = "/data/overdue", method = RequestMethod.GET)
+    public void getRepost(HttpServletResponse response) {
+        logger.debug(LogUtil.getMethodName());
+
+        try {
+            ByteArrayOutputStream bytesOutput = XLSGenerator.createXLSByteArray(
+                    clientService.getOverdueClients(),
+                    clientService.getRiskClients(),
+                    clientService.getRatingClients()
+            );
+
+            InputStream inputStream = new BufferedInputStream(new ByteArrayInputStream(bytesOutput.toByteArray()));
+
+            response.setContentType("application/x-download");
+            response.setContentLength(bytesOutput.size());
+            response.setHeader("Content-disposition", "attachment; filename=\"overdue1.xls\"");
+
+            org.apache.commons.io.IOUtils.copy(inputStream, response.getOutputStream());
+            response.getOutputStream().close();
+
+            logger.debug("Обработка завершена - сформированные данные переданы в response");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
