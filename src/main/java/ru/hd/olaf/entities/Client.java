@@ -82,7 +82,7 @@ public class Client {
     }
 
     @Basic
-    @Column(name = "risk")
+    @Column(name = "risk", columnDefinition="TEXT")
     public String getRisk() {
         return risk;
     }
@@ -92,7 +92,7 @@ public class Client {
     }
 
     @Basic
-    @Column(name = "rating")
+    @Column(name = "rating", columnDefinition="TEXT")
     public String getRating() {
         return rating;
     }
@@ -111,5 +111,32 @@ public class Client {
 
     public void setBranch(Branch branch) {
         this.branch = branch;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Client client = (Client) o;
+
+        if (name != null ? !name.equals(client.name) : client.name != null) return false;
+        if (createDate != null ? !createDate.equals(client.createDate) : client.createDate != null) return false;
+        if (updateDate != null ? !updateDate.equals(client.updateDate) : client.updateDate != null) return false;
+        if (risk != null ? !risk.equals(client.risk) : client.risk != null) return false;
+        if (rating != null ? !rating.equals(client.rating) : client.rating != null) return false;
+        return branch != null ? branch.equals(client.branch) : client.branch == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (createDate != null ? createDate.hashCode() : 0);
+        result = 31 * result + (updateDate != null ? updateDate.hashCode() : 0);
+        result = 31 * result + (risk != null ? risk.hashCode() : 0);
+        result = 31 * result + (rating != null ? rating.hashCode() : 0);
+        result = 31 * result + (branch != null ? branch.hashCode() : 0);
+        return result;
     }
 }

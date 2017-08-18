@@ -45,6 +45,8 @@
                 'columnCreateDate': $('#columnCreateDate').val(),
                 'columnUpdateDate': $('#columnUpdateDate').val(),
                 'columnBranchCode': $('#columnBranchCode').val(),
+                'columnRisk': $('#columnRisk').val(),
+                'columnRating': $('#columnRating').val(),
                 'smtpHost': $('#smtpHost').val(),
                 'smtpPort': $('#smtpPort').val(),
                 'smtpLogin': $('#smtpLogin').val(),
@@ -93,7 +95,7 @@
 
                             <div class="row">
                                 <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
-                                    <h5>Дата заведения клиента</h5>
+                                    <h5>Даты заполнения анкеты</h5>
                                 </div>
                                 <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
                                     <div class="form-group">
@@ -112,6 +114,29 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Степень риска</h5>
+                                </div>
+                                <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="columnRisk" type="number" class="form-control wam-text-size-2" value="${columnRisk}"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
+                                    <h5>Оценка риска</h5>
+                                </div>
+                                <div class="col-xs-12 col-md-2 wam-margin-top-1 wam-not-padding-xs">
+                                    <div class="form-group">
+                                        <input id="columnRating" type="number" class="form-control wam-text-size-2" value="${columnRating}"/>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="col-xs-12 col-md-4 wam-margin-top-1 wam-not-padding-xs">
                                     <h5>Код подразделения</h5>

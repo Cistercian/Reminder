@@ -231,9 +231,6 @@ div.dataTables_filter {
 	body {
 		background-color: #e6e6e6;
 		overflow-y: scroll;
-		background: url('/resources/img/background2.jpg') center no-repeat;
-		background-size: cover;
-		overflow-y: hidden;
 	}
 	.wam-content-login {
 		width:100%;

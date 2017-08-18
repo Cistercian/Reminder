@@ -67,6 +67,8 @@ public class SettingServiceImpl implements SettingService{
         settings.add("columnName");
         settings.add("columnCreateDate");
         settings.add("columnUpdateDate");
+        settings.add("columnRisk");
+        settings.add("columnRating");
         settings.add("columnBranchCode");
 
         return settings;

@@ -2,10 +2,17 @@ package ru.hd.olaf.mvc.controller;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.hibernate.jdbc.Work;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -205,14 +212,15 @@ public class IndexController {
                 return text;
             }
 
-            XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
-            XSSFSheet sheet = workbook.getSheetAt(0);
+            Workbook workbook = WorkbookFactory.create(file.getInputStream());
+
+            Sheet sheet = workbook.getSheetAt(0);
 
             total = sheet.getLastRowNum();
 
             for (int numRow = sheet.getFirstRowNum(); numRow <= total; numRow++) {
                 logger.debug(String.format("Парсинг строки %d из %d", numRow, total));
-                XSSFRow row = sheet.getRow(numRow);
+                Row row = sheet.getRow(numRow);
                 try {
                     int column = Integer.parseInt(settings.get("columnBranchCode")) - 1;
                     String branchName = row.getCell(column).getStringCellValue();
@@ -293,6 +301,10 @@ public class IndexController {
             logger.debug(text);
             message.append(text);
         } catch (NotOfficeXmlFileException e) {
+            text = String.format("Некорректный формат файла: %s <p>", e.getMessage());
+            logger.debug(text);
+            message.append(text);
+        } catch (InvalidFormatException e) {
             text = String.format("Некорректный формат файла: %s <p>", e.getMessage());
             logger.debug(text);
             message.append(text);
