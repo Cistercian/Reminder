@@ -10,8 +10,8 @@ import ru.hd.olaf.entities.Branch;
 import ru.hd.olaf.entities.Client;
 import ru.hd.olaf.mvc.repository.ClientRepository;
 import ru.hd.olaf.mvc.service.ClientService;
-import ru.hd.olaf.util.LogUtil;
 import ru.hd.olaf.util.ErrorsCountEntity;
+import ru.hd.olaf.util.LogUtil;
 
 import java.util.*;
 
@@ -139,10 +139,10 @@ public class ClientServiceImpl implements ClientService {
         Map<Branch, Long> errors = new HashMap<Branch, Long>();
         List<ErrorsCountEntity> result = new ArrayList<ErrorsCountEntity>();
 
-        for (Client client : Lists.newArrayList(clientRepository.findAll())){
+        for (Client client : Lists.newArrayList(clientRepository.findAll())) {
             String rating = client.getRating();
 
-            if (hasError(rating)){
+            if (hasError(rating)) {
                 Branch branch = client.getBranch();
                 if (errors.containsKey(branch))
                     errors.put(branch, errors.get(branch) + 1);
@@ -151,21 +151,21 @@ public class ClientServiceImpl implements ClientService {
             }
         }
 
-        for (Map.Entry<Branch, Long> entry : errors.entrySet()){
+        for (Map.Entry<Branch, Long> entry : errors.entrySet()) {
             result.add(new ErrorsCountEntity(entry.getValue(), entry.getKey()));
         }
 
         return result;
     }
 
-    private boolean hasError(String rating){
+    private boolean hasError(String rating) {
         //проверка на пустоту
         if (rating == null || rating.trim().length() == 0)
             return true;
 
         //есть в строке буквы (исключаю знаки препинания и пробел) - значение корректное
-        for (char letter : rating.toCharArray()){
-            if (letter < 48 || letter > 57){
+        for (char letter : rating.toCharArray()) {
+            if (letter < 48 || letter > 57) {
                 if (letter != '.' && letter != ',' && letter != ';' && letter != ' ')
                     return false;
             }
@@ -174,10 +174,10 @@ public class ClientServiceImpl implements ClientService {
         return true;
     }
 
-    private void mergeLists(List<ErrorsCountEntity> list, List<ErrorsCountEntity> src){
+    private void mergeLists(List<ErrorsCountEntity> list, List<ErrorsCountEntity> src) {
         for (ErrorsCountEntity error : src) {
 
-            if (list.contains(error)){
+            if (list.contains(error)) {
                 ErrorsCountEntity entity = list.get(list.indexOf(error));
                 entity.setCount(entity.getCount() + error.getCount());
             } else

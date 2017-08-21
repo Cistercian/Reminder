@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by d.v.hozyashev on 16.08.2017.
  */
-public interface ClientRepository extends JpaRepository<Client, Integer>{
+public interface ClientRepository extends JpaRepository<Client, Integer> {
 
     List<Client> findByName(String name);
 

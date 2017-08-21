@@ -1,18 +1,12 @@
 package ru.hd.olaf.mvc.controller;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.hibernate.jdbc.Work;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +22,14 @@ import ru.hd.olaf.mail.SenderEmail;
 import ru.hd.olaf.mvc.service.BranchService;
 import ru.hd.olaf.mvc.service.ClientService;
 import ru.hd.olaf.mvc.service.SettingService;
+import ru.hd.olaf.util.ErrorsCountEntity;
 import ru.hd.olaf.util.JsonResponse;
 import ru.hd.olaf.util.LogUtil;
-import ru.hd.olaf.util.ErrorsCountEntity;
 import ru.hd.olaf.xls.XLSGenerator;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -96,7 +90,7 @@ public class IndexController {
     public String importData(@RequestParam("file") MultipartFile file, Model model) {
         logger.debug(LogUtil.getMethodName());
 
-        String response = "";
+        String response;
         if (!file.isEmpty())
             response = parsingExcelFile(file);
         else
@@ -142,47 +136,6 @@ public class IndexController {
         binder.registerCustomEditor(Date.class, new CustomDateEditor(sdf, true));
     }
 
-    @Deprecated
-    private String parsingCSVFile(MultipartFile file) {
-        logger.debug(LogUtil.getMethodName());
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
-            while (reader.ready()) {
-                String line = reader.readLine();
-                logger.debug(String.format("Считали строку: %s", line));
-                String[] data = line.split(";");
-
-                        /*
-                        data[0] - наименование клиента
-                        data[1] - дата заведения клиента
-                        data[2] - дата обновления клиента
-                        data[3] - степень риска
-                        data[4] - оценка риска
-                        data[5] - код подразделения
-                        */
-                Branch branch = branchService.getExistOrCreate(data[5]);
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-                    Client client = new Client(
-                            data[0],
-                            sdf.parse(data[1]),
-                            data[2] != null && data[2].length() > 0 ? sdf.parse(data[2]) : null,
-                            data[3],
-                            data[4],
-                            branch
-                    );
-
-                    clientService.createOrUpdate(client);
-                } catch (ParseException e) {
-                    logger.debug(String.format("Возникла ошибка при парсинге даты: %s", e.getMessage()));
-                }
-            }
-        } catch (IOException e) {
-            logger.debug(String.format("Возникла ошибка при чтении файла: %s", e.getMessage()));
-        }
-        return null;
-    }
-
     private String parsingExcelFile(MultipartFile file) {
         logger.debug(LogUtil.getMethodName());
 
@@ -202,20 +155,10 @@ public class IndexController {
 
         try {
             //удаление старых данных
-            try {
-                clientService.deleteAllData();
-            } catch (Exception e) {
-                text = String.format("Ошибка удаления текущих данных БД: %s <p>",
-                        ExceptionUtils.getRootCause(e).getMessage());
-
-                logger.debug(text);
-                return text;
-            }
+            clientService.deleteAllData();
 
             Workbook workbook = WorkbookFactory.create(file.getInputStream());
-
             Sheet sheet = workbook.getSheetAt(0);
-
             total = sheet.getLastRowNum();
 
             for (int numRow = sheet.getFirstRowNum(); numRow <= total; numRow++) {
@@ -283,8 +226,8 @@ public class IndexController {
 
                     logger.debug(text);
                     message.append(text);
-                } catch (RuntimeException e) {
-                    text = String.format("Строка: %d: ошибка при сохранении клиента в БД: %s <p>", numRow + 1, e.getMessage());
+                } catch (Exception e) {
+                    text = String.format("Строка: %d: ошибка при работе с БД: %s <p>", numRow + 1, e.getMessage());
                     errors++;
 
                     logger.debug(text);
@@ -293,7 +236,7 @@ public class IndexController {
             }
 
             text = String.format("Импорт завершен. Импортировано %d объектов, всего строк в файле: %d <p><p>",
-                            total - errors + 1, total + 1);
+                    total - errors + 1, total + 1);
             message.insert(0, text);
 
         } catch (IOException e) {
@@ -313,7 +256,7 @@ public class IndexController {
         return message.toString();
     }
 
-    private boolean checkSettings(){
+    private boolean checkSettings() {
         for (String setting : settingService.getNamesColumns()) {
             if (settingService.getByName(setting) == null)
                 return false;
@@ -322,7 +265,7 @@ public class IndexController {
         return true;
     }
 
-    private void sortErrors(List<ErrorsCountEntity> errors){
+    private void sortErrors(List<ErrorsCountEntity> errors) {
         Collections.sort(errors, new Comparator<ErrorsCountEntity>() {
             public int compare(ErrorsCountEntity o1, ErrorsCountEntity o2) {
                 return o2.getCount().compareTo(o1.getCount());

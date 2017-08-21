@@ -1,6 +1,7 @@
 package ru.hd.olaf.mvc.service.impl;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.util.*;
  * Created by d.v.hozyashev on 17.08.2017.
  */
 @Service
-public class SettingServiceImpl implements SettingService{
+public class SettingServiceImpl implements SettingService {
 
     @Autowired
     private SettingRepository settingRepository;
@@ -31,8 +32,12 @@ public class SettingServiceImpl implements SettingService{
     public Setting save(Setting setting) {
         logger.debug(LogUtil.getMethodName());
 
-        setting = settingRepository.save(setting);
-        return setting;
+        try {
+            return settingRepository.save(setting);
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Ошибка сохранения настроек в БД: %s",
+                    ExceptionUtils.getRootCause(e).getMessage()));
+        }
     }
 
     public Map<String, String> getSettings() {
@@ -41,7 +46,7 @@ public class SettingServiceImpl implements SettingService{
         Map<String, String> properties = new HashMap<String, String>();
         List<Setting> settings = Lists.newArrayList(settingRepository.findAll());
 
-        for (Setting setting : settings){
+        for (Setting setting : settings) {
             properties.put(setting.getName(), setting.getValue());
         }
 

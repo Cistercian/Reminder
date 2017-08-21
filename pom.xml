@@ -48,6 +48,8 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.34</version>
+            <!--for tomcat -->
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Hibernate -->

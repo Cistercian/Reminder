@@ -35,7 +35,7 @@ public class XLSGenerator {
 
     private static void fillSheet(Workbook book,
                                   String sheetName,
-                                  List<Client> clients){
+                                  List<Client> clients) {
 
         Sheet sheet = book.createSheet(sheetName);
 
@@ -92,7 +92,6 @@ public class XLSGenerator {
             risk = row.createCell(3);
             rating = row.createCell(4);
             branchCode = row.createCell(5);
-
 
             name.setCellValue(client.getName());
 

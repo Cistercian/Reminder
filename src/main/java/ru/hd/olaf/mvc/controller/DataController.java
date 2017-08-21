@@ -18,9 +18,7 @@ import ru.hd.olaf.xls.XLSGenerator;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by d.v.hozyashev on 16.08.2017.
@@ -94,7 +92,7 @@ public class DataController {
 
             response.setContentType("application/x-download");
             response.setContentLength(bytesOutput.size());
-            response.setHeader("Content-disposition", "attachment; filename=\"overdue1.xls\"");
+            response.setHeader("Content-disposition", "attachment; filename=\"overdue.xls\"");
 
             org.apache.commons.io.IOUtils.copy(inputStream, response.getOutputStream());
             response.getOutputStream().close();

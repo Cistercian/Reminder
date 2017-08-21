@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.hd.olaf.entities.Branch;
-import ru.hd.olaf.mvc.repository.BrachRepository;
+import ru.hd.olaf.mvc.repository.BranchRepository;
 import ru.hd.olaf.mvc.service.BranchService;
 import ru.hd.olaf.util.LogUtil;
 
@@ -18,16 +18,16 @@ public class BranchServiceImpl implements BranchService {
     private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class); //логгер
 
     @Autowired
-    private BrachRepository brachRepository;
+    private BranchRepository branchRepository;
 
     public Branch getExistOrCreate(String code) {
         logger.debug(LogUtil.getMethodName());
 
-        Branch branch = brachRepository.findByCode(code);
+        Branch branch = branchRepository.findByCode(code);
 
         logger.debug(String.format("Обработка подразделения с кодом: %s. Результат поиска подразделения в БД: %s",
                 code, branch != null ? "найдено" : "не найдено"));
 
-        return branch != null ? branch : brachRepository.save(new Branch(code));
+        return branch != null ? branch : branchRepository.save(new Branch(code));
     }
 }
